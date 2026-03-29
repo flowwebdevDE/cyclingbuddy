@@ -801,6 +801,94 @@
     }
     .badge-icon { font-size: 24px; margin-bottom: 4px; display: block; }
     .badge-label { font-size: 11px; font-weight: 700; color: var(--text-soft); }
+
+    /* Desktop View Adaptations */
+    @media (min-width: 1024px) {
+      :root {
+        --max-width: 100%;
+        --nav-w: 280px;
+        --header-h: 88px;
+      }
+
+      body {
+        justify-content: flex-start;
+        background: var(--bg);
+      }
+
+      .app-shell {
+        margin-left: var(--nav-w);
+        width: calc(100% - var(--nav-w));
+        max-width: none;
+      }
+
+      .topbar {
+        padding: 24px 48px;
+        background: rgba(255, 255, 255, 0.95);
+        border-bottom: 1px solid var(--line);
+      }
+
+      main {
+        padding: 48px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      /* Bottom Nav wird zur Sidebar */
+      .bottom-nav {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: var(--nav-w);
+        height: 100vh;
+        max-width: none;
+        transform: none;
+        border-radius: 0;
+        border-top: none;
+        border-right: 1px solid var(--line);
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        align-content: start;
+        padding: 32px 16px;
+        gap: 12px;
+        background: var(--bg-soft);
+        box-shadow: none;
+      }
+
+      .nav-btn {
+        flex-direction: row;
+        justify-content: flex-start;
+        padding: 14px 20px;
+        gap: 16px;
+        font-size: 15px;
+        font-weight: 600;
+        width: 100%;
+        border-radius: 14px;
+      }
+
+      .nav-icon {
+        font-size: 22px;
+      }
+
+      .grid-2 {
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 24px;
+      }
+
+      .hero {
+        padding: 60px;
+        border-radius: 36px;
+      }
+
+      .hero h2 {
+        font-size: 48px;
+        max-width: 800px;
+      }
+
+      .section {
+        margin-top: 40px;
+      }
+    }
   </style>
 </head>
 <body>
