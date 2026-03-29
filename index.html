@@ -1,0 +1,3181 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  
+  <!-- Statusbar Styling -->
+  <meta name="theme-color" content="#10b981" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+  <title>CyclingBuddy</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    :root{
+      --bg: #f8fafc;
+      --bg-soft: #ffffff;
+      --card: #ffffff;
+      --card-strong: #ffffff;
+      --text: #0f172a;
+      --text-soft: #475569; /* Dunkleres Slate für besseren Kontrast */
+      --line: #e2e8f0;
+      --accent: #10b981;
+      --accent-2: #059669;
+      --danger: #ff6b6b;
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --shadow: 0 10px 25px rgba(0,0,0,0.05);
+      --blur: blur(20px);
+      --nav-h: 110px;
+      --header-h: 76px;
+      --max-width: 520px;
+    }
+
+    *{
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body{
+      margin: 0;
+      padding: 0;
+      background: 
+        radial-gradient(circle at top left, rgba(16,185,129,0.08), transparent 40%),
+        radial-gradient(circle at top right, rgba(5,150,105,0.05), transparent 40%),
+        var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+      min-height: 100%;
+    }
+
+    body{
+      display: flex;
+      justify-content: center;
+    }
+
+    .app-shell{
+      width: 100%;
+      max-width: var(--max-width);
+      min-height: 100vh;
+      position: relative;
+      padding-bottom: env(safe-area-inset-bottom);
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+    }
+
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 1100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      /* Padding oben wird um die Höhe der Statusbar (Safe Area) erweitert */
+      padding: calc(14px + env(safe-area-inset-top)) 18px 14px;
+      backdrop-filter: var(--blur);
+      background: rgba(255,255,255,0.8);
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .brand-wrap{
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo{
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .brand h1{
+      margin: 0;
+      font-size: 19px;
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .brand p{
+      margin: 5px 0 0;
+      color: var(--text-soft);
+      font-size: 12px;
+    }
+
+    .icon-btn{
+      border: 0;
+      outline: 0;
+      color: var(--text);
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    main{
+      padding: 18px 16px calc(var(--nav-h) + 24px);
+    }
+
+    .screen{
+      display: none;
+      animation: fadeIn .25s ease;
+    }
+
+    .screen.active{
+      display: block;
+    }
+
+    @keyframes fadeIn{
+      from{ opacity: 0; transform: translateY(8px); }
+      to{ opacity: 1; transform: translateY(0); }
+    }
+
+    .hero{
+      padding: 24px 18px;
+      border-radius: 28px;
+      background: 
+        linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero::after{
+      content: "";
+      position: absolute;
+      inset: auto -40px -60px auto;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(110,231,183,0.25), transparent 65%);
+      pointer-events: none;
+    }
+
+    .eyebrow{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: var(--text-soft);
+      font-size: 12px;
+      margin-bottom: 14px;
+    }
+
+    .hero h2{
+      margin: 0 0 10px;
+      font-size: 34px;
+      line-height: 1.05;
+      letter-spacing: -0.05em;
+    }
+
+    .hero p{
+      margin: 0;
+      color: rgba(255,255,255,0.9);
+      font-size: 15px;
+      line-height: 1.55;
+      max-width: 90%;
+    }
+
+    .hero-actions{
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn{
+      border: 0;
+      outline: 0;
+      border-radius: 15px;
+      padding: 14px 16px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform .15s ease, opacity .15s ease;
+    }
+
+    .btn:active{
+      transform: scale(.98);
+    }
+
+    .btn-primary{
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-secondary{
+      background: #f1f5f9;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    /* Spezielle Button-Farben innerhalb der Hero-Section */
+    .hero .btn-primary{
+      background: #ffffff;
+      color: var(--accent-2);
+    }
+    .hero .btn-secondary{
+      background: rgba(255,255,255,0.15);
+      color: white;
+    }
+
+    .section{
+      margin-top: 22px;
+    }
+
+    .section-head{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .section-head h3{
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -0.03em;
+    }
+
+    .section-head span{
+      color: var(--text-soft);
+      font-size: 13px;
+    }
+
+    .grid{
+      display: grid;
+      gap: 12px;
+    }
+
+    .grid-2{
+      grid-template-columns: repeat(2, minmax(0,1fr));
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      backdrop-filter: var(--blur);
+      color: var(--text);
+      box-shadow: var(--shadow);
+    }
+
+    .stat-card h4,
+    .list-card h4,
+    .card h4{
+      margin: 0 0 8px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .muted{
+      color: var(--text-soft);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .big-number{
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin-top: 10px;
+    }
+
+    .map-wrapper {
+      position: relative;
+      margin-top: 12px;
+    }
+
+    .locate-btn {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      z-index: 500;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      color: var(--text);
+      transition: all 0.2s ease;
+    }
+
+    .locate-btn:active {
+      transform: scale(0.9);
+      background: #f1f5f9;
+    }
+
+    #map,
+    #detailMap {
+      height: 320px;
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      z-index: 1;
+    }
+
+    .list{
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .list-item{
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+    }
+
+    .delete-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-soft);
+      padding: 8px;
+      cursor: pointer;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      transition: all 0.2s;
+      margin-left: 4px;
+    }
+
+    .delete-btn:hover {
+      background: rgba(255, 107, 107, 0.1);
+      color: var(--danger);
+    }
+
+    .avatar{
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      background: #f1f5f9;
+      color: var(--accent-2);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .item-content{
+      flex: 1;
+      min-width: 0;
+    }
+
+    .item-title{
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    
+    .item-stats{
+      font-size: 11px;
+      color: var(--accent-2);
+      margin-top: 4px;
+    }
+
+    .item-sub{
+      font-size: 13px;
+      color: var(--text-soft);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(110,231,183,0.1);
+      color: var(--accent-2); /* Dunkleres Grün für bessere Lesbarkeit auf hellem Grund */
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid rgba(110,231,183,0.18);
+      white-space: nowrap;
+    }
+
+    .fab-import{
+      width: 100%;
+      margin-top: 12px;
+      margin-bottom: 12px;
+      border-radius: 18px;
+      padding: 6px;
+      background: var(--bg-soft);
+      border: 1px dashed var(--line);
+      color: var(--accent);
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .input,
+    .textarea,
+    .select-trigger{
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--bg-soft);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 14px 14px;
+      font-size: 14px;
+      outline: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .select-trigger::after {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-right: 2px solid var(--text-soft);
+      border-bottom: 2px solid var(--text-soft);
+      transform: rotate(45deg) translateY(-2px);
+    }
+
+    .input::placeholder,
+    .textarea::placeholder{
+      color: #808089;
+    }
+
+    .textarea{
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .form-group{
+      margin-bottom: 12px;
+    }
+
+    .label{
+      display: block;
+      font-size: 13px;
+      color: var(--text-soft);
+      margin-bottom: 8px;
+    }
+
+    .empty-state{
+      padding: 24px 16px;
+      border-radius: 20px;
+      text-align: center;
+      border: 1px dashed var(--line);
+      background: var(--bg-soft);
+      color: var(--text-soft);
+      line-height: 1.6;
+    }
+
+    .bottom-nav{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%) translateZ(0);
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      width: calc(100% - 32px);
+      max-width: calc(var(--max-width) - 32px);
+      height: 72px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      padding: 10px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.62);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+      z-index: 1200;
+    }
+
+    .nav-btn{
+      border: 0;
+      background: transparent;
+      color: var(--text-soft);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: .2s ease;
+    }
+
+    .nav-btn.active{
+      background: #f1f5f9;
+      color: var(--text);
+    }
+
+    .nav-icon{
+      font-size: 19px;
+      line-height: 1;
+    }
+
+    .tag-row{
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+
+    .tag-row::-webkit-scrollbar{
+      display: none;
+    }
+
+    .tag{
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 390px){
+      .hero h2{
+        font-size: 30px;
+      }
+      .grid-2{
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Custom Popup Styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      z-index: 3000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-card {
+      background: var(--card);
+      width: 100%;
+      max-width: 340px;
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      border: 1px solid var(--line);
+      animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes modalIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-card h3 { margin: 0 0 10px; font-size: 20px; letter-spacing: -0.02em; }
+    .modal-card p { margin: 0 0 24px; color: var(--text-soft); line-height: 1.5; font-size: 15px; }
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-card .btn-secondary { background: #f1f5f9; color: var(--text); }
+    .modal-actions .btn { 
+      flex: 1; 
+      padding: 12px; 
+      border-radius: 14px;
+    }
+
+    /* Picker Styles */
+    .modal-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+    .modal-list-item {
+      padding: 16px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: background 0.2s;
+    }
+    .modal-list-item:active {
+      background: #f1f5f9;
+    }
+    .modal-list-item.selected {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Suggested Route Styles */
+    .suggestion-card {
+      border: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+    .suggestion-card:active {
+      border-color: var(--accent);
+      transform: scale(0.98);
+    }
+    .difficulty-tag {
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 800;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    /* App Mode Toggles */
+    body.mode-fitness .community-only {
+      display: none !important;
+    }
+    body.mode-fitness .bottom-nav {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    /* Fullscreen Navigation Styles */
+    #screen-navigation {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: #000;
+      display: none;
+      flex-direction: column;
+    }
+    #screen-navigation.active { display: flex; }
+    
+    .nav-header {
+      position: absolute;
+      top: calc(20px + env(safe-area-inset-top));
+      left: 16px;
+      right: 16px;
+      z-index: 2100;
+      background: rgba(30, 41, 59, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 18px;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: white;
+    }
+    .nav-instruction-icon {
+      width: 54px;
+      height: 54px;
+      background: var(--accent);
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    .nav-instruction-text {
+      flex: 1;
+    }
+    .nav-next-dist {
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+    .nav-next-action {
+      font-size: 15px;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+    #navMap {
+      flex: 1;
+      width: 100%;
+    }
+    .nav-footer {
+      position: absolute;
+      bottom: 24px;
+      left: 16px;
+      right: 16px;
+      z-index: 2100;
+      background: white;
+      padding: 20px;
+      border-radius: 28px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+      align-items: center;
+    }
+    .nav-speed-circle {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid var(--line);
+      padding-right: 20px;
+    }
+    .nav-speed-large {
+      font-size: 38px;
+      font-weight: 900;
+      color: var(--text);
+      line-height: 1;
+    }
+    .nav-stats-row {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .nav-stat-main {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .nav-stat-sub {
+      font-size: 15px;
+      color: var(--text-soft);
+      font-weight: 500;
+    }
+    .nav-btn-exit {
+      background: #fee2e2;
+      color: var(--danger);
+      border: none;
+      padding: 14px 24px;
+      border-radius: 16px;
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    /* Badge Styles */
+    .badge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .badge-item {
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 12px 8px;
+      text-align: center;
+      opacity: 0.4;
+      filter: grayscale(1);
+      transition: all 0.3s ease;
+    }
+    .badge-item.earned {
+      opacity: 1;
+      filter: grayscale(0);
+      border-color: var(--accent);
+      background: rgba(16, 185, 129, 0.05);
+    }
+    .badge-icon { font-size: 24px; margin-bottom: 4px; display: block; }
+    .badge-label { font-size: 11px; font-weight: 700; color: var(--text-soft); }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-wrap">
+        <div class="logo">
+          <img src="logo.png" alt="CyclingBuddy Logo">
+        </div>
+        <div class="brand">
+          <h1>CyclingBuddy</h1>
+          <p>Ride together. Not alone.</p>
+        </div>
+      </div>
+      <button style="display: none;" class="icon-btn" id="topActionBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </header>
+
+    <main>
+      <!-- HOME -->
+      <section class="screen active" id="screen-home">
+        <div class="hero">
+          <div class="eyebrow">Neue Touren • Leute in deiner Nähe</div>
+          <h2>Finde Radfahrer in deiner Region.</h2>
+          <p>
+            Verbinde dich mit Fahrern auf deinem Level, plane Ausfahrten,
+            organisiere Gruppentouren und importiere GPX-Routen.
+          </p>
+          <div class="hero-actions">
+            <button class="btn btn-primary community-only" data-target="search">Leute finden</button>
+            <button class="btn btn-secondary" data-target="tours">Touren ansehen</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h3>Routen entdecken</h3>
+            <span>Vorschläge</span>
+          </div>
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="margin-bottom:12px;">
+              <div class="select-trigger" id="suggestDistTrigger" data-value="medium">Distanz: Mittel</div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;" id="findRoutesBtn">Zufällige Route planen</button>
+          </div>
+        </div>
+
+        <div class="section community-only">
+          <div class="section-head">
+            <h3>Übersicht</h3>
+            <span>Aktuell</span>
+          </div>
+          <div class="grid grid-2">
+            <div class="card stat-card">
+              <h4>Fahrer in der Nähe</h4>
+              <div class="muted">Bereit für gemeinsame Ausfahrten</div>
+              <div class="big-number">0</div>
+            </div>
+            <div class="card stat-card">
+              <h4>Offene Touren</h4>
+              <div class="muted">Heute & am Wochenende</div>
+              <div class="big-number">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h3>Region entdecken</h3>
+            <span>Live Karte</span>
+          </div>
+          <div class="map-wrapper">
+            <div id="map"></div>
+            <button class="locate-btn" id="locateBtn" title="Meinen Standort finden">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="section community-only">
+          <div class="section-head">
+            <h3>Passende Fahrer</h3>
+            <span>Vorschläge</span>
+          </div>
+          <div class="empty-state">
+            Suche nach Fahrern in deiner Region, um hier Vorschläge zu erhalten.
+          </div>
+        </div>
+      </section>
+
+      <!-- SEARCH -->
+      <section class="screen" id="screen-search">
+        <div class="section">
+          <div class="section-head">
+            <h3>Fahrer finden</h3>
+            <span>Suche</span>
+          </div>
+
+          <div class="form-group">
+            <label class="label">Ort oder Region</label>
+            <input class="input" type="text" placeholder="z. B. Offenburg, Oberkirch, Straßburg" />
+          </div>
+
+          <div class="form-group">
+            <label class="label">Distanz</label>
+            <div class="select-trigger" id="searchDistTrigger" data-value="any">Beliebig</div>
+          </div>
+
+          <button class="btn btn-primary" style="width:100%;">Suche starten</button>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h3>Ergebnisse</h3>
+            <span id="searchResultCount">0 Ergebnisse</span>
+          </div>
+          <div class="empty-state">Starte eine Suche, um passende Radsportler zu finden.</div>
+        </div>
+      </section>
+
+      <!-- TOURS -->
+      <section class="screen" id="screen-tours">
+        <div class="section">
+          <div class="section-head">
+            <h3>Touren</h3>
+            <span>GPX & Planung</span>
+          </div>
+
+          <div class="card">
+            <h4>GPX-Import</h4>
+            <p class="muted">Importiere deine Fahrten von Wahoo, Garmin oder Strava im GPX-Format.</p>
+            <label class="fab-import" for="gpxInput">+ GPX-Datei auswählen</label>
+            <input id="gpxInput" type="file" accept=".gpx" hidden />
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h3>Meine Touren</h3>
+            <span>Importiert</span>
+          </div>
+          <div id="noToursMsg" class="empty-state">Noch keine Touren importiert.</div>
+          <div id="toursList" class="list"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h3>Geplante Fahrten</h3>
+            <span>Merkliste</span>
+          </div>
+          <div id="plannedToursList" class="list">
+            <div class="empty-state">Noch keine Fahrten geplant.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- GROUPS -->
+      <section class="screen" id="screen-groups">
+        <div class="section">
+          <div class="section-head">
+            <h3>Gruppentouren</h3>
+            <span>Community</span>
+          </div>
+          <div class="empty-state">Du bist aktuell in keiner Gruppe.</div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h3>Neue Gruppe erstellen</h3>
+            <span>Form</span>
+          </div>
+
+          <div class="card">
+            <div class="form-group">
+              <label class="label">Gruppenname</label>
+              <input class="input" type="text" placeholder="z. B. Offenburg Evening Riders" />
+            </div>
+            <div class="form-group">
+              <label class="label">Beschreibung</label>
+              <textarea class="textarea" placeholder="Worum geht es in der Gruppe?"></textarea>
+            </div>
+            <button class="btn btn-primary" style="width:100%;">Gruppe erstellen</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROFILE -->
+      <section class="screen" id="screen-profile">
+        <div class="section">
+          <div class="card" style="padding:20px;">
+            <div style="display:flex; align-items:center; gap:14px;">
+              <div class="avatar" id="profileAvatar" style="width:64px;height:64px;border-radius:22px;font-size:20px;">CB</div>
+              <div>
+                <h3 style="margin:0 0 5px; font-size:22px;" id="profileNameDisplay">Dein Name</h3>
+                <div class="muted" id="profileSub" style="margin-bottom: 8px;">Region angeben • Flow Mode</div>
+                <div id="levelBadge" style="display: inline-flex; align-items: center; gap: 6px; background: var(--text); color: white; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase;">
+                  Level <span id="userLevel">1</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="xpWrapper" style="margin-top: 15px;">
+              <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; margin-bottom: 5px;">
+                <span>Erfahrung (XP)</span>
+                <span id="xpText">0 / 500</span>
+              </div>
+              <div style="width: 100%; height: 6px; background: var(--line); border-radius: 10px; overflow: hidden;">
+                <div id="xpBar" style="width: 0%; height: 100%; background: var(--accent); transition: width 0.5s ease;"></div>
+              </div>
+            </div>
+
+            <div class="grid grid-2" style="margin-top:18px;">
+              <div class="card" style="padding:14px;">
+                <h4>Ø Distanz</h4>
+                <div class="big-number" id="profileAvgDist" style="font-size:24px;">42 km</div>
+              </div>
+              <div class="card" style="padding:14px;">
+                <h4>Touren</h4>
+                <div class="big-number" id="profileTourCount" style="font-size:24px;">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" id="badgesSection">
+          <div class="section-head">
+            <h3>Erfolge</h3>
+            <span>Abzeichen</span>
+          </div>
+          <div class="card">
+            <div class="badge-grid" id="badgeContainer">
+              <!-- Badges werden via JS eingefügt -->
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h3>Profil bearbeiten</h3>
+            <span>Basis</span>
+          </div>
+
+          <div class="card">
+            <div class="form-group">
+              <label class="label">Name</label>
+              <input class="input" type="text" id="profileNameInput" placeholder="Dein Name" />
+            </div>
+
+            <div class="form-group">
+              <label class="label">Region</label>
+              <input class="input" type="text" id="profileRegionInput" placeholder="Deine Region" />
+            </div>
+
+            <div class="form-group">
+              <label class="label">Über mich</label>
+              <textarea class="textarea">Ich suche Leute für gemeinsame Ausfahrten in der Region.</textarea>
+            </div>
+
+            <button class="btn btn-primary" id="profileSaveBtn" style="width:100%;">Speichern</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="screen" id="screen-settings">
+        <div class="section">
+          <div class="section-head">
+            <h3>Einstellungen</h3>
+            <button class="btn btn-secondary" id="settingsDoneBtn" style="padding: 8px 12px;">Fertig</button>
+          </div>
+          
+          <div class="card">
+            <h4>App-Präferenzen</h4>
+            <div class="form-group">
+              <label class="label">Einheiten</label>
+              <div class="select-trigger" id="unitSelect" data-value="metric">Metrisch (km, km/h)</div>
+            </div>
+            <div style="display: none;" class="form-group">
+              <label class="label">Standard-Kartenansicht</label>
+              <div class="select-trigger" id="mapViewSelect" data-value="cyclosm">CyclOSM (Klassisch)</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: none;" class="section">
+          <div class="card">
+            <h4>Sicherheit & Datenschutz</h4>
+            <div class="form-group" style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 15px;">
+              <label class="label" style="margin:0;">Standort für andere sichtbar</label>
+              <input type="checkbox" id="visibilityToggle" checked style="width:20px; height:20px; accent-color:var(--accent);">
+            </div>
+            <p class="muted">Wenn deaktiviert, wirst du nicht auf der Karte für andere Fahrer in deiner Nähe angezeigt.</p>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="card">
+            <h4>Account & System</h4>
+            <div class="list" style="display: none; gap: 8px;">
+              <button class="btn btn-secondary" style="width:100%; text-align:left; color:var(--text);">Benachrichtigungen verwalten</button>
+              <button class="btn btn-secondary" style="width:100%; text-align:left; color:var(--text);">Passwort ändern</button>
+              <button class="btn btn-secondary" id="logoutBtn" style="width:100%; text-align:left; color:var(--danger); border-color: rgba(255,107,107,0.2);">Abmelden</button>
+            </div>
+            <div style="margin-top: 20px; text-align: center;" class="muted">
+              CyclingBuddy v1.0.4<br>Made with Outdoor Love 🌲
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TOUR PREVIEW -->
+      <section class="screen" id="screen-tour-preview">
+        <div class="section">
+          <div class="section-head">
+            <h3 id="previewTourTitle">Routenvorschlag</h3>
+            <button class="btn btn-secondary" style="padding: 8px 12px;" onclick="switchScreen('home')">Abbrechen</button>
+          </div>
+          
+          <div id="previewMap" style="height: 320px; border-radius: var(--radius-xl); border: 1px solid var(--line); box-shadow: var(--shadow); margin-bottom: 20px;"></div>
+
+          <div class="grid grid-2">
+            <div class="card" style="text-align:center;">
+              <div class="label" style="margin:0;">Geplante Distanz</div>
+              <div class="item-title" id="preStatDist" style="font-size:18px;">-- km</div>
+            </div>
+            <div class="card" style="text-align:center;">
+              <div class="label" style="margin:0;">Geplanter Aufstieg</div>
+              <div class="item-title" id="preStatGain" style="font-size:18px;">-- m</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h3>Höhenprofil (Vorschau)</h3>
+          </div>
+          <div class="card" style="padding: 10px; height: 160px; position: relative;">
+            <canvas id="previewElevationChart" style="width: 100%; height: 100%;"></canvas>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h3>Zusatzinfos</h3>
+          </div>
+          <div class="card">
+            <div class="form-group">
+              <label class="label">Name der Tour</label>
+              <input class="input" type="text" id="previewNameInput" placeholder="Name eingeben..." />
+            </div>
+            <div class="form-group">
+              <label class="label">Tags (kommagetrennt)</label>
+              <input class="input" type="text" id="previewTagsInput" placeholder="z. B. Training, Berge" />
+            </div>
+            <div class="form-group">
+              <label class="label">Notizen</label>
+              <textarea class="textarea" id="previewNotesInput" style="min-height: 80px;" placeholder="Planungshinweise..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" id="previewSurfacesSection" style="display:none;">
+          <div class="section-head">
+            <h3>Untergründe</h3>
+            <span>Beschaffenheit</span>
+          </div>
+          <div class="card">
+            <div id="surfaceBar" style="height: 12px; display: flex; border-radius: 6px; overflow: hidden; margin-bottom: 12px; background: var(--line);"></div>
+            <div id="surfaceList" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;"></div>
+          </div>
+        </div>
+
+        <div style="margin-top: 24px;">
+          <button class="btn btn-primary" id="savePreviewBtn" style="width: 100%; padding: 18px; font-size: 16px;">Tour einplanen & speichern</button>
+        </div>
+      </section>
+
+      <!-- TOUR DETAIL -->
+      <section class="screen" id="screen-tour-detail">
+        <div class="section">
+          <div class="section-head">
+            <h3 id="detailTourTitle">Tour Details</h3>
+            <button class="btn btn-secondary" style="padding: 8px 12px;" onclick="switchScreen('tours')">Zurück</button>
+          </div>
+          
+          <div id="detailMap" style="margin-bottom: 20px;"></div>
+
+          <div class="grid grid-2" id="detailStatsGrid">
+            <div class="card" style="text-align:center;">
+              <div class="label" style="margin:0;">Distanz</div>
+              <div class="item-title" id="statDist" style="font-size:18px;">-- km</div>
+            </div>
+            <div class="card" style="text-align:center;">
+              <div class="label" style="margin:0;">Ø Leistung</div>
+              <div class="item-title" id="statPower" style="font-size:18px;">-- W</div>
+            </div>
+            <div class="card" style="text-align:center;">
+              <div class="label" style="margin:0;">Max Leistung</div>
+              <div class="item-title" id="statMaxPower" style="font-size:18px;">-- W</div>
+            </div>
+            <div class="card" style="text-align:center;">
+              <div class="label" style="margin:0;">Ø Puls</div>
+              <div class="item-title" id="statHR" style="font-size:18px;">-- bpm</div>
+            </div>
+            <div class="card" style="text-align:center;">
+              <div class="label" style="margin:0;">Ø Speed</div>
+              <div class="item-title" id="statSpeed" style="font-size:18px;">-- km/h</div>
+            </div>
+            <div class="card" style="text-align:center;">
+              <div class="label" style="margin:0;">Max Speed</div>
+              <div class="item-title" id="statMaxSpeed" style="font-size:18px;">-- km/h</div>
+            </div>
+            <div class="card" style="text-align:center;">
+              <div class="label" style="margin:0;">Ø Trittfrequenz</div>
+              <div class="item-title" id="statCad" style="font-size:18px;">-- rpm</div>
+            </div>
+            <div class="card" style="text-align:center;">
+              <div class="label" style="margin:0;">Punkte</div>
+              <div class="item-title" id="statPoints" style="font-size:18px;">--</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h3>Höhenprofil</h3>
+            <span id="statGain">-- m Aufstieg</span>
+          </div>
+          <div class="card" style="padding: 10px; height: 160px; position: relative;">
+            <canvas id="elevationChart" style="width: 100%; height: 100%;"></canvas>
+          </div>
+        </div>
+
+        <div class="section" id="speedChartSection" style="display:none;">
+          <div class="section-head">
+            <h3>Geschwindigkeit</h3>
+            <span>km/h Verlauf</span>
+          </div>
+          <div class="card" style="padding: 10px; height: 120px; position: relative;">
+            <canvas id="speedChart" style="width: 100%; height: 100%;"></canvas>
+          </div>
+        </div>
+
+        <div class="section" id="powerChartSection" style="display:none;">
+          <div class="section-head">
+            <h3>Leistung</h3>
+            <span>Watt Verlauf</span>
+          </div>
+          <div class="card" style="padding: 10px; height: 120px; position: relative;">
+            <canvas id="powerChart" style="width: 100%; height: 100%;"></canvas>
+          </div>
+        </div>
+
+        <div class="section" id="cadenceChartSection" style="display:none;">
+          <div class="section-head">
+            <h3>Trittfrequenz</h3>
+            <span>rpm Verlauf</span>
+          </div>
+          <div class="card" style="padding: 10px; height: 120px; position: relative;">
+            <canvas id="cadenceChart" style="width: 100%; height: 100%;"></canvas>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h3>Notizen & Tags</h3>
+          </div>
+          <div class="card">
+            <div class="form-group">
+              <label class="label">Name der Tour</label>
+              <input class="input" type="text" id="detailNameInput" placeholder="Tour Name" />
+            </div>
+            <div class="form-group">
+              <label class="label">Tags</label>
+              <input class="input" type="text" id="detailTagsInput" placeholder="z. B. Intervall, Aussicht" />
+            </div>
+            <div class="form-group">
+              <label class="label">Persönliche Notizen</label>
+              <textarea class="textarea" id="detailNotesInput" style="min-height: 80px;" placeholder="Wie war die Fahrt?"></textarea>
+            </div>
+            <button class="btn btn-secondary" id="saveDetailExtraBtn" style="width:100%; margin-top: 8px;">Änderungen speichern</button>
+          </div>
+        </div>
+
+        <div style="margin-top: 24px;">
+          <button class="btn btn-primary" id="startNavBtn" style="width: 100%; padding: 16px; font-size: 16px;">Navigation starten</button>
+          <button class="btn btn-secondary" id="openExportBtn" style="width: 100%; margin-top: 12px; border-color: var(--accent); color: var(--accent);">Bild mit Stats exportieren</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- FULLSCREEN NAVIGATION -->
+    <section id="screen-navigation">
+      <div class="nav-header">
+        <div class="nav-instruction-icon" id="navIcon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19 7-7-7-7"/><path d="M5 12h14"/></svg>
+        </div>
+        <div class="nav-instruction-text">
+          <div class="nav-next-dist" id="navNextDist">--- m</div>
+          <div class="nav-next-action" id="navNextText">Berechne Route...</div>
+        </div>
+      </div>
+      <div id="navMap"></div>
+      <div class="nav-footer">
+        <div class="nav-info-group">
+          <div class="nav-stats-row">
+            <span class="nav-stat-main" id="navTimeLeft">-- min</span>
+            <span class="nav-stat-sub" id="navDistLeft">-- km</span>
+          </div>
+          <div class="nav-stats-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line);">
+            <span class="nav-stat-sub" style="color:var(--text-soft); font-weight:600;">
+              <span id="navLiveSpeed" style="color:var(--text); font-size:16px;">0.0</span> km/h
+            </span>
+            <span class="nav-stat-sub" style="margin-left: 15px; color:var(--text-soft); font-weight:600;">
+              <span id="navLiveSlope" style="color:var(--text); font-size:16px;">0</span>% Steigung
+            </span>
+          </div>
+          <div class="nav-stat-sub" style="margin-top: 4px;">
+            Ankunft ca. <span id="navEta" style="color:var(--text); font-weight: 700;">--:--</span>
+          </div>
+        </div>
+        <button class="nav-btn-exit" onclick="toggleNavigation()">Beenden</button>
+      </div>
+    </section>
+
+    <!-- PHOTO EXPORT OVERLAY (Share Sheet Style) -->
+    <section id="screen-photo-export" style="position: fixed; inset: 0; background: var(--bg); z-index: 2500; display: none; flex-direction: column; animation: slideUp 0.4s cubic-bezier(0.32, 1, 0.23, 1);">
+      <style>
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+      </style>
+      
+      <div class="topbar" style="background: var(--bg-soft); border-bottom: 1px solid var(--line);">
+        <div class="brand-wrap">
+          <h3>Tour teilen</h3>
+        </div>
+        <button class="icon-btn" onclick="closeExportEditor()" style="border:none; background:none;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div style="flex: 1; overflow-y: auto; padding: 20px; padding-bottom: calc(100px + env(safe-area-inset-bottom));">
+        <div class="card" id="exportPreviewContainer" style="padding: 10px; text-align: center; background: repeating-conic-gradient(#e2e8f0 0% 25%, #fff 0% 50%) 50% / 20px 20px; border-radius: 24px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1); border: 1px solid var(--line);">
+          <input type="file" id="exportImgInput" accept="image/*" hidden />
+          <label class="fab-import" for="exportImgInput" id="exportImgLabel" style="margin:0; padding: 60px 20px; border-style: solid; background: white;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 12px; color: var(--accent);">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+              <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+            Foto für den Hintergrund wählen
+            <div style="font-size: 11px; font-weight: 400; color: var(--text-soft); margin-top: 4px;">oder Transparenz nutzen</div>
+          </label>
+          <img id="exportPreviewImg" style="width: 100%; border-radius: 14px; display: none; margin-top: 10px;" />
+          <canvas id="exportCanvas" style="display: none;"></canvas>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h3>Anzeigeoptionen</h3>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;" id="exportToggles">
+            <!-- Toggles werden dynamisch via JS mit SVG Icons erzeugt -->
+          </div>
+
+          <div class="card" style="margin-top: 15px; padding: 15px;">
+            <div class="label" style="display: flex; justify-content: space-between;">
+              <span>Routenstärke</span>
+              <span id="routeWidthVal">100%</span>
+            </div>
+            <input type="range" id="routeWidthSlider" min="0.5" max="3" step="0.1" value="1" 
+                   style="width: 100%; accent-color: #FC4C02; margin-top: 10px;">
+          </div>
+        </div>
+      </div>
+
+      <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; padding-bottom: calc(20px + env(safe-area-inset-bottom)); background: var(--bg-soft); border-top: 1px solid var(--line);">
+        <button class="btn btn-primary" id="downloadExportBtn" style="width: 100%; padding: 18px; font-size: 16px; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);">Bild speichern & teilen</button>
+      </div>
+    </section>
+
+    <!-- Custom Popup Modal -->
+    <div class="modal-overlay" id="customPopup">
+      <div class="modal-card">
+        <h3 id="popupTitle">Titel</h3>
+        <p id="popupMessage">Nachricht...</p>
+        <div id="modalContentSlot"></div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" id="popupCancel" style="color:var(--text); border:1px solid var(--line);">Abbrechen</button>
+          <button class="btn btn-primary" id="popupConfirm" style="background:var(--accent); color:white;">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-screen="home">
+        <div class="nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <span>Home</span>
+      </button>
+      <button class="nav-btn community-only" data-screen="search">
+        <div class="nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </div>
+        <span>Suche</span>
+      </button>
+      <button class="nav-btn" data-screen="tours">
+        <div class="nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+        </div>
+        <span>Touren</span>
+      </button>
+      <button class="nav-btn community-only" data-screen="groups">
+        <div class="nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <span>Gruppen</span>
+      </button>
+      <button class="nav-btn" data-screen="profile">
+        <div class="nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <span>Profil</span>
+      </button>
+    </nav>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // Capacitor Plugin Initialization
+    const { StatusBar, Geolocation, Filesystem, Share } = window.Capacitor?.Plugins || {};
+
+    if (StatusBar) {
+      StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+      StatusBar.setStyle({ style: 'LIGHT' }).catch(() => {});
+    }
+
+    // Explizite Abfrage der Standort-Berechtigung
+    async function initGeolocation() {
+      const isNative = window.Capacitor?.isNativePlatform();
+      try {
+        if (isNative && Geolocation) {
+          const status = await Geolocation.checkPermissions();
+          if (status.location !== 'granted') {
+            await Geolocation.requestPermissions();
+          }
+        } 
+      } catch (e) {
+        console.error("Fehler bei der Berechtigungsabfrage:", e);
+      }
+    }
+
+    // Global State für Touren
+    let currentDetailTourId = null;
+    let currentDetailTourType = 'done';
+
+    // === APP CONFIGURATION ===
+    const ENABLE_COMMUNITY = false; // Hier auf 'true' setzen, um alle Social-Features zu aktivieren
+    const GRAPHHOPPER_KEY = 'a20ce01c-8f59-470c-b074-79c4d977768d'; // Hier deinen GraphHopper Key einsetzen
+
+    // Haversine Formel für Distanzberechnung (Global verfügbar)
+    const calcDist = (lat1, lon1, lat2, lon2) => {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    };
+
+    if (!ENABLE_COMMUNITY) {
+      document.body.classList.add('mode-fitness');
+      window.addEventListener('DOMContentLoaded', () => {
+        const heroH2 = document.querySelector('.hero h2');
+        const heroP = document.querySelector('.hero p');
+        if(heroH2) heroH2.innerText = "Deine Performance im Fokus.";
+        if(heroP) heroP.innerText = "Analysiere deine GPX-Tracks, checke deine Leistungswerte und verwalte deine Touren ganz privat.";
+      });
+    }
+
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const screens = document.querySelectorAll('.screen');
+    const actionButtons = document.querySelectorAll('[data-target]');
+    const navScreen = document.getElementById('screen-navigation');
+    const gpxInput = document.getElementById('gpxInput');
+    const topActionBtn = document.getElementById('topActionBtn');
+    const locateBtn = document.getElementById('locateBtn');
+    const toursList = document.getElementById('toursList');
+    const noToursMsg = document.getElementById('noToursMsg');
+    const profileAvgDist = document.getElementById('profileAvgDist');
+    const profileSaveBtn = document.getElementById('profileSaveBtn');
+    const settingsDoneBtn = document.getElementById('settingsDoneBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const unitTrigger = document.getElementById('unitSelect');
+    const mapViewTrigger = document.getElementById('mapViewSelect');
+    const searchDistTrigger = document.getElementById('searchDistTrigger');
+    const visibilityToggle = document.getElementById('visibilityToggle');
+    const suggestDistTrigger = document.getElementById('suggestDistTrigger');
+    const findRoutesBtn = document.getElementById('findRoutesBtn');
+    const profileNameInput = document.getElementById('profileNameInput');
+    const profileRegionInput = document.getElementById('profileRegionInput');
+    const suggestionResults = document.getElementById('suggestionResults');
+    const plannedToursList = document.getElementById('plannedToursList');
+    const exportImgInput = document.getElementById('exportImgInput');
+    const exportPreviewImg = document.getElementById('exportPreviewImg');
+    const exportCanvas = document.getElementById('exportCanvas');
+    const downloadExportBtn = document.getElementById('downloadExportBtn');
+    const openExportBtn = document.getElementById('openExportBtn');
+    const routeWidthSlider = document.getElementById('routeWidthSlider');
+
+    function updateTourEmptyState() {
+      noToursMsg.style.display = toursList.children.length > 0 ? 'none' : 'block';
+    }
+
+    function updateProfileStats() {
+      const tours = JSON.parse(localStorage.getItem('cb_tours') || '[]');
+      const count = tours.length;
+      let totalDist = 0;
+      let totalGain = 0;
+      let maxOverallSpeed = 0;
+      let longestRide = 0;
+      let totalXP = 0;
+
+      tours.forEach(t => {
+        const d = parseFloat(t.distFormatted || 0);
+        totalDist += d;
+        const g = (t.totalGain || 0);
+        totalGain += g;
+        if (t.maxSpeed > maxOverallSpeed) maxOverallSpeed = t.maxSpeed;
+        if (d > longestRide) longestRide = d;
+
+        // XP Berechnung: 10 XP pro km, 2 XP pro Höhenmeter
+        totalXP += (d * 10) + (g * 2);
+      });
+
+      // Level System: 1000 XP pro Level
+      const userLevel = Math.floor(totalXP / 1000) + 1;
+      const xpInCurrentLevel = totalXP % 1000;
+      const xpProgressPct = (xpInCurrentLevel / 1000) * 100;
+
+      if(document.getElementById('userLevel')) document.getElementById('userLevel').innerText = userLevel;
+      if(document.getElementById('xpText')) document.getElementById('xpText').innerText = `${Math.round(xpInCurrentLevel)} / 1000 XP`;
+      if(document.getElementById('xpBar')) document.getElementById('xpBar').style.width = `${xpProgressPct}%`;
+
+      const avgDist = count > 0 ? (totalDist / count).toFixed(1) : 0;
+      const unit = unitTrigger.dataset.value === 'imperial' ? 'mi' : 'km';
+      const region = profileRegionInput.value || "Region unbekannt";
+
+      if(document.getElementById('profileTourCount')) document.getElementById('profileTourCount').innerText = count;
+      if(document.getElementById('profileAvgDist')) document.getElementById('profileAvgDist').innerText = `${avgDist} ${unit}`;
+      
+      const profileSub = document.getElementById('profileSub');
+      if(profileSub) {
+        profileSub.innerText = count > 0 
+          ? `${totalDist.toFixed(0)} ${unit} gesamt • ${Math.round(totalGain)}m Hm`
+          : `${region} • Flow Mode`;
+      }
+
+      renderBadges({ totalDist, totalGain, maxOverallSpeed, longestRide, count });
+    }
+
+    // --- Navigation Feature Logic ---
+    let navWatchId = null;
+    let detailUserMarker = null;
+    let wakeLock = null;
+    let currentRouteInstructions = [];
+    let currentRoutePoints = [];
+    let currentRouteElevations = [];
+    let totalRouteDistance = 0;
+    let navProgressIdx = 0; // Trackt den Fortschritt auf dem Pfad
+    let lastNavLat = null, lastNavLon = null, lastNavAlt = null;
+    let navSessionStartTime = 0;
+    let navSessionInitialRemaining = 0;
+    let globalAvgSpeed = 0;
+    let isRerouting = false;
+    const REROUTE_THRESHOLD_KM = 0.05; // 50 Meter
+
+    const getTurnIcon = (sign) => {
+      if (!sign && sign !== 0) return '📍';
+      // Icons basierend auf GraphHopper Signs
+      const icons = {
+        "-3": '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M19 15V9a2 2 0 0 0-2-2H5"/><polyline points="12 14 5 7 12 0" transform="translate(0, 4)"/></svg>', // Sharp Left
+        "-2": '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M19 15V9a2 2 0 0 0-2-2H5"/><polyline points="9 11 5 7 9 3"/></svg>', // Left
+        "-1": '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M15 18l-6-6 6-6"/></svg>', // Slight Left
+        "0": '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m12 5 7 7-7 7"/><path d="M5 12h14"/></svg>', // Straight
+        "1": '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M9 18l6-6-6-6"/></svg>', // Slight Right
+        "2": '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 15V9a2 2 0 0 1 2-2h12"/><polyline points="15 11 19 7 15 3"/></svg>', // Right
+        "3": '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 15V9a2 2 0 0 1 2-2h12"/><polyline points="12 14 19 7 12 0" transform="translate(0, 4)"/></svg>', // Sharp Right
+        "4": "🏁", // Finish
+        "6": "🔄"  // Roundabout
+      };
+      return icons[sign] || icons["0"];
+    };
+
+    async function toggleNavigation() {
+      if (navWatchId !== null) {
+        // Navigation stoppen
+        navScreen.classList.remove('active');
+        document.querySelector('.bottom-nav').style.display = 'grid';
+        document.querySelector('.topbar').style.display = 'flex';
+        
+        const isNative = window.Capacitor?.isNativePlatform();
+        if (isNative && Geolocation && typeof navWatchId === 'string') {
+          Geolocation.clearWatch({ id: navWatchId });
+        } else {
+          navigator.geolocation.clearWatch(navWatchId);
+        }
+
+        navWatchId = null;
+        
+        if (detailUserMarker) {
+          navMap.removeLayer(detailUserMarker);
+        }
+        if (detailUserMarker) {
+          detailMap.removeLayer(detailUserMarker);
+          detailUserMarker = null;
+        }
+        if (wakeLock) {
+          wakeLock.release().then(() => wakeLock = null);
+        }
+        navProgressIdx = 0;
+        lastNavLat = null; lastNavLon = null; lastNavAlt = null;
+        return;
+      }
+
+      // UI vorbereiten
+      navScreen.classList.add('active');
+      document.querySelector('.bottom-nav').style.display = 'none';
+      document.querySelector('.topbar').style.display = 'none';
+      document.getElementById('navNextText').innerText = "Warte auf GPS...";
+
+      // Durchschnittsgeschwindigkeit aus Profil laden
+      const tours = JSON.parse(localStorage.getItem('cb_tours') || '[]');
+      if (tours.length > 0) {
+        const sumSpeed = tours.reduce((acc, t) => acc + (parseFloat(t.avgSpeed) || 0), 0);
+        globalAvgSpeed = sumSpeed / tours.length;
+      } else {
+        globalAvgSpeed = 0;
+      }
+      navSessionStartTime = Date.now();
+      navSessionInitialRemaining = 0;
+
+      // Wichtig: Karte sofort validieren, da der Container nun sichtbar ist
+      setTimeout(() => {
+        navMap.invalidateSize();
+        
+        // Aktuelle Route auf der Nav-Map einzeichnen
+        navMap.eachLayer(layer => {
+          if (layer instanceof L.Polyline) navMap.removeLayer(layer);
+        });
+        if (currentRoutePoints.length > 0) {
+          L.polyline(currentRoutePoints, {color: '#ef4444', weight: 6, opacity: 0.8}).addTo(navMap);
+        }
+      }, 100);
+
+      // Screen Wake Lock (verhindert Standby)
+      if ('wakeLock' in navigator) {
+        try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
+      }
+
+      const positionCallback = (pos) => {
+        if (!pos) return;
+        const latlng = [pos.coords.latitude, pos.coords.longitude];
+        
+        if (!detailUserMarker) {
+          detailUserMarker = L.marker(latlng, {
+            icon: L.divIcon({
+              html: `<div style="width:24px; height:24px; background:#3b82f6; border:3px solid white; border-radius:50%; box-shadow:0 0 15px rgba(59,130,246,0.6); position:relative;">
+                      <div style="position:absolute; top:-8px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-bottom:10px solid #3b82f6;"></div>
+                     </div>`,
+              className: '', iconSize: [24, 24], iconAnchor: [12, 12]
+            })
+          }).addTo(navMap);
+        } else {
+          detailUserMarker.setLatLng(latlng);
+        }
+        
+        navMap.setView(latlng, 18); // Sehr nah ran für Abbiege-Präzision
+
+        // Live-Speed & Steigung berechnen
+        const liveSpeed = Math.max(0, (pos.coords.speed || 0) * 3.6); // m/s zu km/h
+        document.getElementById('navLiveSpeed').innerText = liveSpeed.toFixed(1);
+
+        let currentSlope = 0;
+        if (lastNavAlt !== null && lastNavLat !== null) {
+          const d = calcDist(lastNavLat, lastNavLon, latlng[0], latlng[1]); // km
+          if (d > 0.005) { // Update erst ab 5m Bewegung, um GPS-Jitter bei der Steigung zu mindern
+            const altDiff = pos.coords.altitude - lastNavAlt;
+            currentSlope = Math.round((altDiff / (d * 1000)) * 100);
+            lastNavLat = latlng[0]; lastNavLon = latlng[1]; lastNavAlt = pos.coords.altitude;
+          }
+        } else {
+          lastNavLat = latlng[0]; lastNavLon = latlng[1]; lastNavAlt = pos.coords.altitude;
+        }
+        document.getElementById('navLiveSlope').innerText = currentSlope;
+
+        // 1. Berechne Pfad-Fortschritt (Wichtig für Rundkurse)
+        let remainingKm = totalRouteDistance;
+        if (currentRoutePoints.length > 0) {
+          let minDist = Infinity;
+          let closestIdx = 0;
+          
+          // Suche den nächstgelegenen Punkt auf der Route. 
+          // Wir suchen im Bereich um den aktuellen Fortschritt (+/- 50 Punkte), 
+          // um bei Rundkursen nicht zum Ziel zu springen, wenn man gerade erst startet.
+          let searchStart = Math.max(0, navProgressIdx - 20);
+          let searchEnd = Math.min(currentRoutePoints.length, navProgressIdx + 100);
+          
+          // Falls wir den Anschluss verlieren oder am Start sind, suchen wir etwas großzügiger
+          if (navProgressIdx === 0) searchEnd = currentRoutePoints.length;
+
+          for (let i = searchStart; i < searchEnd; i++) {
+            const d = calcDist(latlng[0], latlng[1], currentRoutePoints[i][0], currentRoutePoints[i][1]);
+            if (d < minDist) {
+              minDist = d;
+              closestIdx = i;
+            }
+          }
+          
+          navProgressIdx = closestIdx;
+
+          // Rerouting Check: Wenn mehr als 50m abseits der Route
+          if (minDist > REROUTE_THRESHOLD_KM && !isRerouting) {
+            performReroute(latlng, closestIdx);
+          }
+
+          const distCovered = (currentRouteElevations && currentRouteElevations[navProgressIdx]) ? currentRouteElevations[navProgressIdx].dist : 0;
+          
+          if (navSessionInitialRemaining === 0) navSessionInitialRemaining = totalRouteDistance - distCovered;
+          
+          remainingKm = Math.max(0, totalRouteDistance - distCovered);
+        }
+
+        // 2. Abbiegehinweise aktualisieren
+        if (currentRouteInstructions.length > 0) {
+          const nextInstr = currentRouteInstructions[0]; // Vereinfacht: wir nehmen die erste in der Liste
+          document.getElementById('navIcon').innerHTML = getTurnIcon(nextInstr.sign);
+          document.getElementById('navNextText').innerText = nextInstr.text;
+          document.getElementById('navNextDist').innerText = Math.round(nextInstr.distance) + " m";
+        } else {
+          document.getElementById('navNextText').innerText = "Route folgen";
+          document.getElementById('navNextDist').innerText = "Aktiv";
+        }
+
+        // 3. Footer-Statistiken (Zeit, Distanz, ETA) aktualisieren
+        // Berechnung der Zeit: Profil-Durchschnitt -> Sitzungs-Durchschnitt -> Fallback 20 km/h
+        const sessionTimeH = (Date.now() - navSessionStartTime) / 3600000;
+        const sessionDist = Math.max(0, navSessionInitialRemaining - remainingKm);
+        const sessionAvgSpeed = sessionTimeH > 0 ? (sessionDist / sessionTimeH) : 0;
+        
+        const speedForEta = globalAvgSpeed > 5 ? globalAvgSpeed : (sessionAvgSpeed > 5 ? sessionAvgSpeed : 20);
+        const travelTimeMin = Math.round((remainingKm / speedForEta) * 60);
+        
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + travelTimeMin);
+        const etaString = now.getHours().toString().padStart(2, '0') + ':' + 
+                          now.getMinutes().toString().padStart(2, '0');
+
+        document.getElementById('navTimeLeft').innerText = travelTimeMin + " min";
+        document.getElementById('navDistLeft').innerText = remainingKm.toFixed(1) + " km";
+        document.getElementById('navEta').innerText = etaString;
+
+      };
+
+      const isNative = window.Capacitor?.isNativePlatform();
+      if (isNative && Geolocation) {
+        navWatchId = await Geolocation.watchPosition({ enableHighAccuracy: true }, positionCallback);
+      } else {
+        navWatchId = navigator.geolocation.watchPosition(positionCallback, (err) => {
+          console.error("Navigationsfehler:", err);
+        }, { enableHighAccuracy: true });
+      }
+    }
+
+    async function performReroute(currentPos, targetIdx) {
+      isRerouting = true;
+      const statusText = document.getElementById('navNextText');
+      const originalText = statusText.innerText;
+      statusText.innerText = "Berechne Umleitung...";
+
+      try {
+        const target = currentRoutePoints[targetIdx];
+        const url = `https://graphhopper.com/api/1/route?point=${currentPos[0]},${currentPos[1]}&point=${target[0]},${target[1]}&profile=bike&points_encoded=false&elevation=true&key=${GRAPHHOPPER_KEY}`;
+        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Reroute failed");
+        
+        const data = await response.json();
+        const path = data.paths[0];
+        
+        // Neue Punkte vom Reroute extrahieren
+        const newPoints = path.points.coordinates.map(p => [p[1], p[0]]);
+        
+        // Route zusammenführen: Reroute + Rest der alten Route
+        const remainingPoints = currentRoutePoints.slice(targetIdx);
+        currentRoutePoints = [...newPoints, ...remainingPoints];
+        
+        // Distanzen und Elevation neu berechnen für den neuen Pfad
+        let newTotalDist = 0;
+        currentRouteElevations = currentRoutePoints.map((p, i) => {
+          if (i > 0) {
+            newTotalDist += calcDist(currentRoutePoints[i-1][0], currentRoutePoints[i-1][1], p[0], p[1]);
+          }
+          return { dist: newTotalDist, val: 0 }; // Elevation hier vereinfacht
+        });
+        
+        totalRouteDistance = newTotalDist;
+        navProgressIdx = 0;
+
+        // Karte aktualisieren
+        navMap.eachLayer(layer => {
+          if (layer instanceof L.Polyline) navMap.removeLayer(layer);
+        });
+        L.polyline(currentRoutePoints, {color: '#ef4444', weight: 6, opacity: 0.8}).addTo(navMap);
+        
+        showPopup({ title: "Umleitung berechnet", message: "Du bist zurück auf dem Weg!" });
+        
+      } catch (err) {
+        console.error("Rerouting Fehler:", err);
+      } finally {
+        setTimeout(() => {
+          isRerouting = false;
+          statusText.innerText = originalText;
+        }, 2000);
+      }
+    }
+
+    function openTourPreview(tour) {
+      switchScreen('tour-preview');
+      
+      // Untergründe verarbeiten
+      const surfaceSection = document.getElementById('previewSurfacesSection');
+      const surfaceBar = document.getElementById('surfaceBar');
+      const surfaceList = document.getElementById('surfaceList');
+      
+      if (tour.surfaces && tour.surfaces.length > 0) {
+        surfaceSection.style.display = 'block';
+        surfaceBar.innerHTML = '';
+        surfaceList.innerHTML = '';
+
+        const colors = { asphalt: '#64748b', gravel: '#b45309', paved: '#94a3b8', unpaved: '#78350f', concrete: '#cbd5e1', fine_gravel: '#d97706' };
+        const stats = {};
+        let totalDist = 0;
+
+        tour.surfaces.forEach(([start, end, type]) => {
+          const d = tour.elevations[end].dist - tour.elevations[start].dist;
+          stats[type] = (stats[type] || 0) + d;
+          totalDist += d;
+        });
+
+        Object.entries(stats).forEach(([type, dist]) => {
+          const pct = (dist / totalDist) * 100;
+          const color = colors[type] || '#e2e8f0';
+          
+          // Bar segment
+          const seg = document.createElement('div');
+          seg.style.width = pct + '%';
+          seg.style.background = color;
+          surfaceBar.appendChild(seg);
+
+          // List item
+          surfaceList.innerHTML += `<div style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-soft);">
+            <div style="width:8px; height:8px; border-radius:50%; background:${color};"></div>
+            <span style="text-transform:capitalize;">${type.replace('_', ' ')}</span> <b style="color:var(--text);">${Math.round(pct)}%</b>
+          </div>`;
+        });
+      } else {
+        surfaceSection.style.display = 'none';
+      }
+
+      setTimeout(() => {
+        document.getElementById('previewTourTitle').innerText = tour.name;
+        document.getElementById('preStatDist').innerText = tour.dist + " km";
+        document.getElementById('preStatGain').innerText = tour.gain + " m";
+        document.getElementById('previewNameInput').value = tour.name;
+
+        document.getElementById('previewTagsInput').value = "";
+        document.getElementById('previewNotesInput').value = "";
+
+        // Karte aktualisieren
+        previewMap.invalidateSize();
+        
+        // Alte Pfade entfernen
+        previewMap.eachLayer(layer => {
+          if (layer instanceof L.Polyline) previewMap.removeLayer(layer);
+        });
+
+        // Neuen Pfad zeichnen
+        if (tour.points && tour.points.length > 1) {
+          const polyline = L.polyline(tour.points, {color: '#ef4444', weight: 5, opacity: 0.8}).addTo(previewMap);
+          previewMap.fitBounds(polyline.getBounds(), { padding: [30, 30] });
+        }
+        
+        // Chart zeichnen
+        drawLineChart('previewElevationChart', tour.elevations || [], '#ef4444', 'rgba(239, 68, 68, 0.15)');
+
+        // Speichern Button Logik
+        const saveBtn = document.getElementById('savePreviewBtn');
+        saveBtn.onclick = () => {
+          tour.name = document.getElementById('previewNameInput').value || tour.name;
+          tour.tags = document.getElementById('previewTagsInput').value;
+          tour.notes = document.getElementById('previewNotesInput').value;
+          planRoute(tour);
+          // Nach dem Speichern zur Tourenliste wechseln
+          switchScreen('tours');
+        };
+      }, 300);
+    }
+
+    function openTourDetail(tour) {
+      switchScreen('tour-detail');
+      
+      // Fallbacks für unterschiedliche Datenstrukturen (Importiert vs. Geplant)
+      const title = tour.name || "Unbekannte Tour";
+      const dist = tour.distFormatted || tour.dist || "--";
+      const gain = Math.round(tour.totalGain || tour.gain || 0);
+      const pointsCount = tour.points ? tour.points.length : 0;
+
+      currentDetailTourId = tour.id;
+      // Identifiziere den Typ anhand der Datenstruktur oder ID-Präfix
+      currentDetailTourType = String(tour.id).startsWith('gh-') || !tour.distFormatted ? 'planned' : 'done';
+
+      setTimeout(() => {
+        document.getElementById('detailTourTitle').innerText = title;
+        document.getElementById('statDist').innerText = dist + " km";
+        document.getElementById('statPower').innerText = (tour.avgPower || 0) > 0 ? tour.avgPower + " W" : "--";
+        document.getElementById('statMaxPower').innerText = (tour.maxPower || 0) > 0 ? tour.maxPower + " W" : "--";
+        document.getElementById('statHR').innerText = (tour.avgHR || 0) > 0 ? tour.avgHR + " bpm" : "--";
+        document.getElementById('statCad').innerText = (tour.avgCad || 0) > 0 ? tour.avgCad + " rpm" : "--";
+        document.getElementById('statSpeed').innerText = (tour.avgSpeed || 0) > 0 ? tour.avgSpeed + " km/h" : "--";
+        document.getElementById('statMaxSpeed').innerText = (tour.maxSpeed || 0) > 0 ? tour.maxSpeed + " km/h" : "--";
+        document.getElementById('statPoints').innerText = pointsCount;
+        document.getElementById('statGain').innerText = gain + " m Aufstieg";
+
+        document.getElementById('detailNameInput').value = tour.name || "";
+        document.getElementById('detailTagsInput').value = tour.tags || "";
+        document.getElementById('detailNotesInput').value = tour.notes || "";
+
+        detailMap.invalidateSize();
+        detailMap.eachLayer(layer => {
+          if (layer instanceof L.Polyline) detailMap.removeLayer(layer);
+        });
+
+        if (tour.points && tour.points.length > 1) {
+          const polyline = L.polyline(tour.points, {color: '#ef4444', weight: 5, opacity: 0.8}).addTo(detailMap);
+          detailMap.fitBounds(polyline.getBounds(), { padding: [30, 30] });
+        }
+        
+        drawLineChart('elevationChart', tour.elevations || [], '#ef4444', 'rgba(239, 68, 68, 0.15)');
+
+        const charts = [
+          { id: 'speed', data: tour.speedSeries, color: '#3b82f6', fill: 'rgba(59, 130, 246, 0.1)' },
+          { id: 'power', data: tour.powerSeries, color: '#ef4444', fill: 'rgba(239, 68, 68, 0.1)' },
+          { id: 'cadence', data: tour.cadSeries, color: '#8b5cf6', fill: 'rgba(139, 92, 246, 0.1)' }
+        ];
+
+        charts.forEach(cfg => {
+          const section = document.getElementById(`${cfg.id}ChartSection`);
+          if (cfg.data && cfg.data.length > 1) {
+            section.style.display = 'block';
+            drawLineChart(`${cfg.id}Chart`, cfg.data, cfg.color, cfg.fill);
+          } else {
+            section.style.display = 'none';
+          }
+        });
+
+        // Instructions speichern für Navigation
+        currentRouteInstructions = tour.instructions || [];
+        currentRoutePoints = tour.points || [];
+        currentRouteElevations = tour.elevations || [];
+        totalRouteDistance = parseFloat(dist);
+
+        // Navigation Button zurücksetzen
+        document.getElementById('startNavBtn').onclick = toggleNavigation;
+      }, 300);
+    }
+
+    // --- Photo Export Logic ---
+    let exportBaseImage = null;
+    let exportOptions = { dist: true, gain: true, speed: true, name: true, map: true, transparent: false, power: true, cadence: true, routeWidth: 1.0 };
+    const exportOverlay = document.getElementById('screen-photo-export');
+
+    openExportBtn.onclick = () => {
+      exportOverlay.style.display = 'flex';
+      renderExportToggles();
+      drawExportCanvas();
+    };
+
+    window.closeExportEditor = () => {
+      exportOverlay.style.display = 'none';
+    };
+
+    routeWidthSlider.oninput = (e) => {
+      exportOptions.routeWidth = parseFloat(e.target.value);
+      document.getElementById('routeWidthVal').innerText = Math.round(exportOptions.routeWidth * 100) + "%";
+      drawExportCanvas();
+    };
+
+    exportImgInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          exportBaseImage = img;
+          exportOptions.transparent = false;
+          exportPreviewImg.src = event.target.result;
+          exportPreviewImg.style.display = 'block';
+          document.getElementById('exportImgLabel').style.display = 'none';
+          renderExportToggles();
+          drawExportCanvas();
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    function renderExportToggles() {
+      const container = document.getElementById('exportToggles');
+      const opts = [
+        { id: 'name', label: 'Name', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>' },
+        { id: 'dist', label: 'KM', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>' },
+        { id: 'gain', label: 'Hm', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 18l-6-6 6-6"></path><path d="M12 18l6-6-6-6"></path></svg>' },
+        { id: 'speed', label: 'Speed', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>' },
+        { id: 'power', label: 'Watt', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>' },
+        { id: 'cadence', label: 'RPM', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M3 12h18M12 3v18"></path></svg>' },
+        { id: 'map', label: 'Route', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon></svg>' },
+        { id: 'transparent', label: 'Kein Bild', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="3" x2="21" y2="21"></line></svg>' }
+      ];
+      container.innerHTML = opts.map(opt => `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding: 14px; background: var(--bg-soft); border: 1px solid var(--line); border-radius: 16px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="color:var(--text-soft);">${opt.svg}</span>
+            <span style="font-size:13px; font-weight:700;">${opt.label}</span>
+          </div>
+          <input type="checkbox" ${exportOptions[opt.id] ? 'checked' : ''} onchange="updateExportOption('${opt.id}', this.checked)" style="width:20px; height:20px; accent-color:var(--accent);">
+        </div>
+      `).join('');
+    }
+
+    window.updateExportOption = (id, val) => {
+      exportOptions[id] = val;
+      if (id === 'transparent' && val) {
+        exportBaseImage = null;
+        exportPreviewImg.style.display = 'none';
+        document.getElementById('exportImgLabel').style.display = 'block';
+      }
+      drawExportCanvas();
+    };
+
+    function drawRouteOnCanvas(ctx, points, x, y, size) {
+      if (!points || points.length < 2) return;
+      const lats = points.map(p => p[0]);
+      const lons = points.map(p => p[1]);
+      const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+      const minLon = Math.min(...lons), maxLon = Math.max(...lons);
+      const rangeLat = maxLat - minLat, rangeLon = maxLon - minLon;
+      const maxRange = Math.max(rangeLat, rangeLon);
+      const scale = size / maxRange;
+      
+      // Offset um Route in Box zu zentrieren
+      const offsetX = (size - (rangeLon * scale)) / 2;
+      const offsetY = (size - (rangeLat * scale)) / 2;
+
+      ctx.beginPath();
+      ctx.setLineDash([]);
+      ctx.strokeStyle = '#FC4C02'; // Strava Orange
+      ctx.lineWidth = size * 0.06 * exportOptions.routeWidth;
+      ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+
+      points.forEach((p, i) => {
+        const px = x + offsetX + (p[1] - minLon) * scale;
+        const py = y + offsetY + (maxLat - p[0]) * scale;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      });
+      ctx.stroke();
+    }
+
+    function drawExportCanvas() {
+      const ctx = exportCanvas.getContext('2d');
+      const tour = [...JSON.parse(localStorage.getItem('cb_tours') || '[]'), ...JSON.parse(localStorage.getItem('cb_planned') || '[]')]
+                    .find(t => t.id === currentDetailTourId);
+      
+      if (!tour) {
+        console.error("Tour für Export nicht gefunden");
+        return;
+      }
+
+      const isTransparent = !exportBaseImage;
+      if (exportBaseImage) {
+        const scale = Math.min(1080 / exportBaseImage.width, 1);
+        exportCanvas.width = exportBaseImage.width * scale;
+        exportCanvas.height = exportBaseImage.height * scale;
+        ctx.drawImage(exportBaseImage, 0, 0, exportCanvas.width, exportCanvas.height);
+        
+        const grad = ctx.createLinearGradient(0, exportCanvas.height * 0.7, 0, exportCanvas.height);
+        grad.addColorStop(0, 'rgba(0,0,0,0)');
+        grad.addColorStop(1, 'rgba(0,0,0,0.7)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, exportCanvas.height * 0.6, exportCanvas.width, exportCanvas.height * 0.4);
+        ctx.fillStyle = 'white';
+      } else {
+        exportCanvas.width = 1000; exportCanvas.height = 1000;
+        ctx.clearRect(0, 0, 1000, 1000);
+        ctx.fillStyle = '#10b981';
+      }
+
+      const margin = exportCanvas.width * 0.05;
+      const bottomY = exportCanvas.height - margin;
+
+      // 1. Branding Card (Oben links)
+      const logoImg = document.querySelector('.logo img');
+      const logoSize = Math.round(exportCanvas.height * 0.05);
+      const brandPadding = 12;
+      ctx.font = `900 ${Math.round(exportCanvas.height * 0.026)}px sans-serif`;
+      const brandText = "CYCLINGBUDDY";
+      const brandTextWidth = ctx.measureText(brandText).width;
+      const brandCardW = logoSize + brandTextWidth + brandPadding * 3;
+      const brandCardH = logoSize + brandPadding * 2;
+
+      if (!isTransparent) {
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.2)';
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        ctx.beginPath();
+        ctx.roundRect(margin, margin, brandCardW, brandCardH, 15);
+        ctx.fill();
+        ctx.restore();
+      }
+      
+      if (logoImg && logoImg.complete) {
+        ctx.drawImage(logoImg, margin + brandPadding, margin + brandPadding, logoSize, logoSize);
+      }
+
+      ctx.fillStyle = '#0f172a';
+      ctx.fillText(brandText, margin + logoSize + brandPadding * 2, margin + brandPadding + (logoSize * 0.72));
+
+      // 2. Datenvorbereitung für den unteren Bereich
+      const activeStats = [];
+      if (exportOptions.dist) activeStats.push({ l: "Distanz", v: `${tour.distFormatted || tour.dist} km` });
+      if (exportOptions.gain) activeStats.push({ l: "Höhenmeter", v: `${Math.round(tour.totalGain || tour.gain)} m` });
+      if (exportOptions.speed && tour.avgSpeed) activeStats.push({ l: "Ø Speed", v: `${tour.avgSpeed} km/h` });
+      if (exportOptions.power && tour.avgPower) activeStats.push({ l: "Ø Leistung", v: `${tour.avgPower} W` });
+      if (exportOptions.cadence && tour.avgCad) activeStats.push({ l: "Ø Kadenz", v: `${tour.avgCad} rpm` });
+
+      const getStatWidth = (val) => {
+        const valueSize = Math.round(exportCanvas.height * 0.032);
+        ctx.font = `800 ${valueSize}px sans-serif`;
+        return Math.max(ctx.measureText(val).width + 50, 120);
+      };
+
+      const statsTotalWidth = activeStats.reduce((acc, s) => acc + getStatWidth(s.v), 0) + (activeStats.length - 1) * 15;
+      const wrapperPadding = 25;
+      const nameSize = Math.round(exportCanvas.height * 0.045);
+      ctx.font = `900 ${nameSize}px sans-serif`;
+      const tourName = tour.name.toUpperCase();
+      const nameWidth = exportOptions.name ? ctx.measureText(tourName).width : 0;
+      
+      const wrapperW = Math.max(statsTotalWidth, nameWidth) + wrapperPadding * 2;
+      const statCardH = exportCanvas.height * 0.11;
+      const nameAreaH = exportOptions.name ? nameSize + 25 : 0;
+      const wrapperH = statCardH + nameAreaH + wrapperPadding * 2;
+
+      // 3. Haupt-Wrapper Card (Unten links)
+      if (!isTransparent) {
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.1)';
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.75)'; // Leichtere Card umschließt alles
+        ctx.beginPath();
+        ctx.roundRect(margin, bottomY - wrapperH, wrapperW, wrapperH, 24);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // 4. Tour-Name innerhalb des Wrappers
+      if (exportOptions.name) {
+        ctx.font = `900 ${nameSize}px sans-serif`;
+        ctx.fillStyle = '#0f172a';
+        ctx.fillText(tourName, margin + wrapperPadding, bottomY - wrapperH + wrapperPadding + nameSize);
+      }
+
+      // 5. Einzelne Daten-Cards innerhalb des Wrappers
+      const drawStat = (label, value, xOffset) => {
+        const labelSize = Math.round(exportCanvas.height * 0.016);
+        const valueSize = Math.round(exportCanvas.height * 0.032);
+        const cardPadding = 25;
+        
+        ctx.font = `800 ${valueSize}px sans-serif`;
+        const cardW = Math.max(ctx.measureText(value).width + (cardPadding * 2), 120);
+        const cardH = statCardH;
+
+        ctx.fillStyle = '#ffffff'; // Blickdichte Card innen
+        ctx.beginPath();
+        ctx.roundRect(margin + wrapperPadding + xOffset, bottomY - wrapperPadding - cardH, cardW, cardH, 18);
+        ctx.fill();
+        
+        ctx.font = `800 ${labelSize}px sans-serif`;
+        ctx.fillStyle = '#64748b'; 
+        ctx.fillText(label.toUpperCase(), margin + wrapperPadding + xOffset + cardPadding, bottomY - wrapperPadding - cardH + labelSize + 28);
+        
+        ctx.font = `800 ${valueSize}px sans-serif`;
+        ctx.fillStyle = '#0f172a';
+        ctx.fillText(value, margin + wrapperPadding + xOffset + cardPadding, bottomY - wrapperPadding - 22);
+        
+        return cardW + 15;
+      };
+
+      let currentX = 0;
+      activeStats.forEach(s => {
+        currentX += drawStat(s.l, s.v, currentX);
+      });
+      
+      // Karte (Unten rechts oder oben rechts)
+      if (exportOptions.map) {
+        const mapSize = exportCanvas.width * 0.28;
+        const mapX = exportCanvas.width - mapSize - margin;
+        const mapY = margin;
+        drawRouteOnCanvas(ctx, tour.points, mapX, mapY, mapSize);
+      }
+
+      exportPreviewImg.src = exportCanvas.toDataURL(exportOptions.transparent ? 'image/png' : 'image/jpeg', 0.9);
+      exportPreviewImg.style.display = 'block';
+    }
+
+    downloadExportBtn.onclick = async () => {
+      const type = exportOptions.transparent ? 'image/png' : 'image/jpeg';
+      const dataUrl = exportCanvas.toDataURL(type, 0.9);
+      const ext = exportOptions.transparent ? 'png' : 'jpg';
+      const fileName = `CyclingBuddy_Export_${Date.now()}.${ext}`;
+      
+      const isNative = window.Capacitor?.isNativePlatform();
+      if (isNative && Filesystem) {
+        try {
+          // 1. In Dateisystem schreiben (für direkten Zugriff)
+          const base64Data = dataUrl.split(',')[1];
+          const savedFile = await Filesystem.writeFile({
+            path: fileName,
+            data: base64Data,
+            directory: 'DOCUMENTS' // 'DOCUMENTS' ist unter Android ein sicherer Ort
+          });
+
+          // 2. Share Dialog triggern (erlaubt "In Galerie speichern")
+          if (Share) {
+            await Share.share({
+              title: 'Meine Tour teilen',
+              url: savedFile.uri,
+              dialogTitle: 'Tour exportieren'
+            });
+          }
+          showPopup({ title: "Export fertig!", message: "Das Bild wurde generiert und kann jetzt gespeichert werden." });
+        } catch (err) { 
+          console.error("Export Fehler:", err);
+          showPopup({ title: "Fehler", message: "Konnte Bild nicht speichern." });
+        }
+      } else {
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = dataUrl;
+        link.click();
+      }
+    };
+
+    document.getElementById('saveDetailExtraBtn').onclick = () => {
+      const newName = document.getElementById('detailNameInput').value;
+      const tags = document.getElementById('detailTagsInput').value;
+      const notes = document.getElementById('detailNotesInput').value;
+      const storageKey = currentDetailTourType === 'planned' ? 'cb_planned' : 'cb_tours';
+      
+      let list = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      const idx = list.findIndex(t => t.id === currentDetailTourId);
+      
+      if (idx !== -1) {
+        if (newName) list[idx].name = newName;
+        list[idx].tags = tags;
+        list[idx].notes = notes;
+        localStorage.setItem(storageKey, JSON.stringify(list));
+        
+        // Wenn es eine "done" Tour ist, UI Item in der Liste evtl. nicht nötig neu zu rendern,
+        // aber wir geben Feedback.
+        showPopup({ title: "Gespeichert", message: "Tags und Notizen wurden aktualisiert." });
+        document.getElementById('detailTourTitle').innerText = newName || list[idx].name;
+        
+        // Falls die Liste im Hintergrund aktualisiert werden muss
+        if (currentDetailTourType === 'planned') renderPlannedTours();
+        else { toursList.innerHTML = ""; JSON.parse(localStorage.getItem('cb_tours')).forEach(t => renderTourItem(t)); }
+      }
+    };
+
+    // --- Route Suggestion Logic ---
+    async function planRandomRoute() {
+      if (!GRAPHHOPPER_KEY || GRAPHHOPPER_KEY === 'DEIN_API_KEY') {
+        showPopup({ title: "API Key fehlt", message: "Bitte trage deinen GraphHopper API Key im Code ein." });
+        return;
+      }
+
+      const targetDist = suggestDistTrigger.dataset.value; // short, medium, long
+      // Distanz-Mapping
+      let distanceMeters = 20000;
+      if (targetDist === 'medium') distanceMeters = 40000;
+      if (targetDist === 'long') distanceMeters = 75000;
+
+      let start = [48.471, 7.941];
+      if (userMarker) {
+        const ll = userMarker.getLatLng();
+        start = [ll.lat, ll.lng];
+      }
+
+      findRoutesBtn.innerText = "Plane Route...";
+      findRoutesBtn.disabled = true;
+      
+      try {
+        // Im Free Package nutzen wir GET statt POST und verzichten auf das custom_model,
+        // da dieses Feature im kostenlosen Tarif meistens gesperrt ist.
+        const seed = Math.floor(Math.random() * 1000);
+        const url = `https://graphhopper.com/api/1/route?` + 
+                    `point=${start[0]},${start[1]}&` +
+                    `profile=bike&` +
+                    `algorithm=round_trip&` +
+                    `round_trip.distance=${distanceMeters}&` +
+                    `round_trip.seed=${seed}&` +
+                    `points_encoded=false&` +
+                    `elevation=true&` +
+                    `details=surface&` +
+                    `key=${GRAPHHOPPER_KEY}`;
+
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.message || "API Fehler");
+        }
+        
+        const data = await response.json();
+        const path = data.paths[0];
+        
+        // Transformiere Koordinaten [lon, lat, ele] -> [lat, lon] und berechne Distanz-Verlauf
+        let currentDist = 0;
+        const elevations = [];
+        const points = path.points.coordinates.map((p, i) => {
+          const lat = p[1];
+          const lon = p[0];
+          const ele = p[2] || 0;
+          
+          if (i > 0) {
+            const prev = path.points.coordinates[i-1];
+            currentDist += calcDist(prev[1], prev[0], lat, lon);
+          }
+          elevations.push({ dist: currentDist, val: ele });
+          return [lat, lon];
+        });
+
+        const randomRoute = {
+          id: 'gh-' + Date.now(),
+          name: `Dynamische ${Math.round(path.distance/1000)}km Runde`,
+          dist: (path.distance / 1000).toFixed(1),
+          gain: Math.round(path.ascend || 0),
+          tags: '',
+          notes: '',
+          points: points,
+          elevations: elevations,
+          instructions: path.instructions,
+          surfaces: path.details ? path.details.surface : null
+        };
+
+        openTourPreview(randomRoute);
+      } catch (err) {
+        console.error("GraphHopper Error:", err);
+        showPopup({ title: "Planungsfehler", message: "Details: " + err.message });
+      } finally {
+        findRoutesBtn.innerText = "Zufällige Route planen";
+        findRoutesBtn.disabled = false;
+      }
+    }
+
+    function planRoute(route) {
+      const planned = JSON.parse(localStorage.getItem('cb_planned') || '[]');
+      if (planned.find(p => p.id === route.id)) {
+        showPopup({ title: "Bereits geplant", message: "Diese Route steht schon auf deiner Liste." });
+        return;
+      }
+      planned.push({ ...route, plannedAt: Date.now() });
+      localStorage.setItem('cb_planned', JSON.stringify(planned));
+      renderPlannedTours();
+      showPopup({ title: "Route geplant", message: `"${route.name}" wurde zu deinen geplanten Fahrten hinzugefügt.` });
+    }
+
+    function renderPlannedTours() {
+      const planned = JSON.parse(localStorage.getItem('cb_planned') || '[]');
+      plannedToursList.innerHTML = planned.length ? '' : '<div class="empty-state">Noch keine Fahrten geplant.</div>';
+      
+      planned.forEach(route => {
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.style.cursor = 'pointer';
+        item.onclick = (e) => {
+          if (e.target.closest('.delete-btn')) return;
+          openTourDetail(route);
+        };
+        item.innerHTML = `
+          <div class="avatar" style="background:rgba(59, 130, 246, 0.1); color:#3b82f6;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          </div>
+          <div class="item-content">
+            <div class="item-title">${route.name}</div>
+            <div class="item-sub">${route.dist || route.distFormatted} km • ${route.gain || Math.round(route.totalGain || 0)} Hm</div>
+          </div>
+          <button class="delete-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+          </button>
+        `;
+        item.querySelector('.delete-btn').onclick = () => {
+          const newPlanned = planned.filter(p => p.id !== route.id);
+          localStorage.setItem('cb_planned', JSON.stringify(newPlanned));
+          renderPlannedTours();
+        };
+        plannedToursList.appendChild(item);
+      });
+    }
+
+    findRoutesBtn.onclick = planRandomRoute;
+
+    suggestDistTrigger.onclick = () => {
+      showPicker({
+        title: "Distanz wählen",
+        options: [
+          { label: "Kurz (< 30km)", value: "short" },
+          { label: "Mittel (30-60km)", value: "medium" },
+          { label: "Lang (> 60km)", value: "long" }
+        ],
+        currentValue: suggestDistTrigger.dataset.value,
+        onSelect: (val, label) => {
+          suggestDistTrigger.innerText = "Distanz: " + label.split(' ')[0];
+          suggestDistTrigger.dataset.value = val;
+        }
+      });
+    };
+
+    function renderBadges(stats) {
+      const container = document.getElementById('badgeContainer');
+      if(!container) return;
+
+      const badgeDefinitions = [
+        { id: 'climber', label: 'Bergziege', icon: '⛰️', check: stats.totalGain >= 2000 },
+        { id: 'miler', label: '500km Club', icon: '🚴', check: stats.totalDist >= 500 },
+        { id: 'sprinter', label: 'Abfahrts-Pro', icon: '⚡', check: stats.maxOverallSpeed >= 55 },
+        { id: 'endurance', label: 'Ausdauer-Ass', icon: '🏆', check: stats.longestRide >= 60 },
+        { id: 'veteran', label: 'Stammgast', icon: '⭐', check: stats.count >= 10 }
+      ];
+
+      container.innerHTML = badgeDefinitions.map(b => `
+        <div class="badge-item ${b.check ? 'earned' : ''}" title="${b.check ? 'Freigeschaltet!' : 'Noch nicht erreicht'}">
+          <span class="badge-icon">${b.icon}</span>
+          <span class="badge-label">${b.label}</span>
+        </div>
+      `).join('');
+    }
+
+    // Local Storage Management
+    function saveTourToLocal(tourData) {
+      const tours = JSON.parse(localStorage.getItem('cb_tours') || '[]');
+      tours.push(tourData);
+      localStorage.setItem('cb_tours', JSON.stringify(tours));
+    }
+
+    function updateAvatar(name) {
+      const avatar = document.getElementById('profileAvatar');
+      if (!avatar) return;
+      const trimmed = (name || "").trim();
+      if (!trimmed) {
+        avatar.innerText = "CB";
+        return;
+      }
+      const parts = trimmed.split(/\s+/);
+      const initials = parts.length === 1 
+        ? parts[0].substring(0, 2) 
+        : parts[0][0] + (parts[1] ? parts[1][0] : "");
+      avatar.innerText = initials.toUpperCase();
+    }
+
+    function loadToursFromLocal() {
+      const tours = JSON.parse(localStorage.getItem('cb_tours') || '[]');
+      tours.forEach(tour => renderTourItem(tour));
+      updateTourEmptyState();
+      renderPlannedTours();
+
+      // Profil-Daten laden
+      const savedName = localStorage.getItem('cb_profile_name') || "";
+      const savedRegion = localStorage.getItem('cb_profile_region') || "";
+
+      profileNameInput.value = savedName;
+      document.getElementById('profileNameDisplay').innerText = savedName || "Dein Name";
+      updateAvatar(savedName);
+      profileRegionInput.value = savedRegion;
+
+      updateProfileStats();
+    }
+
+    function deleteTour(id, element) {
+      showPopup({
+        title: "Tour löschen?",
+        message: "Möchtest du diese Tour dauerhaft entfernen?",
+        confirmText: "Löschen",
+        cancelText: "Abbrechen",
+        onConfirm: () => {
+          let tours = JSON.parse(localStorage.getItem('cb_tours') || '[]');
+          tours = tours.filter(t => t.id !== id);
+          localStorage.setItem('cb_tours', JSON.stringify(tours));
+          element.remove();
+          updateTourEmptyState();
+          updateProfileStats();
+        }
+      });
+    }
+
+    function renderTourItem(tour) {
+      const tourItem = document.createElement('div');
+      tourItem.className = 'list-item';
+      tourItem.style.cursor = 'pointer';
+      tourItem.innerHTML = `
+        <div class="avatar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <div class="item-content">
+          <div class="item-title">${tour.name}</div>
+          <div class="item-sub">${tour.distFormatted} km • ${tour.avgSpeed > 0 ? tour.avgSpeed + ' km/h' : (tour.avgPower > 0 ? tour.avgPower + 'W Ø' : 'Analyse bereit')}</div>
+        </div>
+        <div class="pill">Analyse</div>
+        <button class="delete-btn" title="Löschen">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </button>
+      `;
+
+      // Klick auf die Tour öffnet Details
+      tourItem.onclick = (e) => {
+        // Wenn der Delete-Button geklickt wurde, nichts tun (wird via Button-Handler geregelt)
+        if (e.target.closest('.delete-btn')) return;
+        openTourDetail(tour);
+      };
+
+      // Klick auf Löschen
+      const delBtn = tourItem.querySelector('.delete-btn');
+      delBtn.onclick = (e) => {
+        e.stopPropagation();
+        deleteTour(tour.id, tourItem);
+      };
+
+      toursList.prepend(tourItem);
+    }
+
+    // Initiales Laden beim Start
+    window.addEventListener('DOMContentLoaded', () => {
+      loadToursFromLocal();
+      loadCommunityMarkers();
+    });
+
+    // Custom Popup Logic
+    const popup = document.getElementById('customPopup');
+    const popupTitle = document.getElementById('popupTitle');
+    const popupMessage = document.getElementById('popupMessage');
+    const popupConfirm = document.getElementById('popupConfirm');
+    const popupCancel = document.getElementById('popupCancel');
+
+    function showPopup({ title, message, confirmText = "OK", cancelText = null, onConfirm }) {
+      popupTitle.innerText = title;
+      popupMessage.innerText = message;
+      popupConfirm.innerText = confirmText;
+      
+      if (cancelText) {
+        popupCancel.style.display = "block";
+        popupCancel.innerText = cancelText;
+      } else {
+        popupCancel.style.display = "none";
+      }
+
+      popup.classList.add('active');
+
+      const close = () => popup.classList.remove('active');
+
+      popupConfirm.onclick = () => {
+        close();
+        if (onConfirm) onConfirm();
+      };
+      
+      popupCancel.onclick = () => {
+        close();
+      };
+    }
+
+    function showPicker({ title, options, currentValue, onSelect }) {
+      popupTitle.innerText = title;
+      popupMessage.innerText = "";
+      popupConfirm.style.display = "none";
+      popupCancel.innerText = "Abbrechen";
+      popupCancel.style.display = "block";
+      
+      const slot = document.getElementById('modalContentSlot');
+      slot.innerHTML = '<div class="modal-list"></div>';
+      const list = slot.querySelector('.modal-list');
+
+      options.forEach(opt => {
+        const item = document.createElement('div');
+        item.className = `modal-list-item ${opt.value === currentValue ? 'selected' : ''}`;
+        item.innerText = opt.label;
+        item.onclick = () => {
+          onSelect(opt.value, opt.label);
+          close();
+        };
+        list.appendChild(item);
+      });
+
+      popup.classList.add('active');
+      const close = () => {
+        popup.classList.remove('active');
+        setTimeout(() => {
+          slot.innerHTML = "";
+          popupConfirm.style.display = "block";
+        }, 300);
+      };
+
+      popupCancel.onclick = close;
+    }
+
+    function drawLineChart(canvasId, series, color, fill) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      if (!series || series.length < 2) return;
+
+      const padding = 10;
+      const w = rect.width - (padding * 2);
+      const h = rect.height - (padding * 2);
+      
+      const values = series.map(s => s.val);
+      const maxVal = Math.max(...values);
+      const minVal = Math.min(...values);
+      const range = (maxVal - minVal) || 1;
+      const maxDist = series[series.length - 1].dist;
+
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      
+      // Fill
+      if (fill) {
+        ctx.beginPath();
+        series.forEach((s, i) => {
+          const x = padding + (maxDist > 0 ? (s.dist / maxDist) * w : 0);
+          const y = rect.height - padding - ((s.val - minVal) / range) * h;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.lineTo(padding + w, rect.height - padding);
+        ctx.lineTo(padding, rect.height - padding);
+        ctx.closePath();
+        ctx.fillStyle = fill;
+        ctx.fill();
+      }
+
+      // Line
+      ctx.beginPath();
+      series.forEach((s, i) => {
+        const x = padding + (maxDist > 0 ? (s.dist / maxDist) * w : 0);
+        const y = rect.height - padding - ((s.val - minVal) / range) * h;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+    }
+
+    // Map Setup
+    const map = L.map('map', { zoomControl: false }).setView([48.471, 7.941], 13);
+    const detailMap = L.map('detailMap', { zoomControl: false }).setView([48.471, 7.941], 13);
+    const previewMap = L.map('previewMap', { zoomControl: false }).setView([48.471, 7.941], 13);
+    const navMap = L.map('navMap', { zoomControl: false }).setView([48.471, 7.941], 18);
+    
+    // Fix: Karte beim ersten Laden korrekt berechnen
+    setTimeout(() => {
+      map.invalidateSize();
+      detailMap.invalidateSize();
+      previewMap.invalidateSize();
+      navMap.invalidateSize();
+    }, 250);
+    
+    // Map Layers Definition
+    const MAPBOX_TOKEN = 'pk.eyJ1IjoiZmVsaXhrYXBwbGVyIiwiYSI6ImNtNXFhaG80YzBndHYya3NjMDB5ZGFqN2MifQ.nNfDnd-O8T8K7-HqL8E7Xw'; 
+    const THUNDERFOREST_KEY = 'fbc461971701469e803c40333887d148'; // Demo Key
+
+    const layers = {
+      mapbox: L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`, {
+        tileSize: 512,
+        zoomOffset: -1,
+        attribution: '© Mapbox'
+      }),
+      thunderforest: L.tileLayer(`https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=${THUNDERFOREST_KEY}`, {
+        attribution: '&copy; Thunderforest',
+        maxZoom: 22
+      }),
+      cyclosm: L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
+        maxZoom: 20, attribution: 'CyclOSM'
+      }),
+      osm: L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, attribution: '&copy; OpenStreetMap'
+      }),
+      satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{x}/{y}', {
+        attribution: 'Esri Satellite'
+      })
+    };
+
+    let activeLayer = layers.cyclosm;
+
+    // WICHTIG: Jede Karte braucht ihre EIGENE Instanz des Layers!
+    activeLayer.addTo(map);
+    
+    L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', { maxZoom: 20 }).addTo(detailMap);
+    L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', { maxZoom: 20 }).addTo(previewMap);
+    L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', { maxZoom: 20 }).addTo(navMap);
+
+    // Custom SVG Marker Icon
+    const bikeIcon = L.divIcon({
+      html: `
+        <div style="background:var(--accent); color:white; padding:8px; border-radius:14px; border:2px solid white; box-shadow:var(--shadow); display:flex;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/>
+          </svg>
+        </div>`,
+      className: '',
+      iconSize: [40, 40],
+      iconAnchor: [20, 20]
+    });
+
+    // Community Markers Logic
+    const communityMarkersGroup = L.layerGroup().addTo(map);
+
+    function loadCommunityMarkers() {
+      // Falls Community-Funktionen deaktiviert sind, keine Marker laden
+      if (!ENABLE_COMMUNITY) return;
+      
+      communityMarkersGroup.clearLayers();
+
+      // In einer echten Anwendung würden diese Daten via API geladen (z.B. basierend auf map.getBounds())
+      const mockCommunityTours = [
+        { id: 'c1', name: "Schwarzwald Panorama", lat: 48.471, lon: 7.941, dist: "45km", gain: "850m" },
+        { id: 'c2', name: "Rheinebene Genussrunde", lat: 48.520, lon: 7.850, dist: "32km", gain: "40m" },
+        { id: 'c3', name: "Mooskopf MTB Trail", lat: 48.460, lon: 8.080, dist: "28km", gain: "1100m" }
+      ];
+
+      mockCommunityTours.forEach(tour => {
+        const marker = L.marker([tour.lat, tour.lon], { icon: bikeIcon });
+        marker.bindPopup(`
+          <div style="min-width:160px; padding:4px;">
+            <span class="difficulty-tag" style="color:var(--accent); font-size:10px;">Community Content</span>
+            <div class="item-title" style="margin-bottom:4px; font-size:14px;">${tour.name}</div>
+            <div class="muted" style="margin-bottom:12px; font-size:12px;">${tour.dist} • ${tour.gain}</div>
+            <button class="btn btn-primary" style="width:100%; padding:8px; font-size:12px; border-radius:10px;" onclick="showPopup({title:'${tour.name}', message:'Diese Tour wurde von der Community geteilt.'})">Details</button>
+          </div>
+        `);
+        communityMarkersGroup.addLayer(marker);
+      });
+    }
+
+    // Aktualisierung beim Verschieben der Karte für dynamisches Feeling
+    map.on('moveend', () => {
+      if (map.getZoom() > 8) loadCommunityMarkers();
+    });
+
+    // Geolocation Logic
+    let userMarker, userCircle;
+
+    function onLocationFound(e) {
+      const radius = e.accuracy / 2;
+
+      if (userMarker) map.removeLayer(userMarker);
+      if (userCircle) map.removeLayer(userCircle);
+
+      userMarker = L.marker(e.latlng, {
+        icon: L.divIcon({
+          html: `<div style="width:20px; height:20px; background:#3b82f6; border:3px solid white; border-radius:50%; box-shadow:0 0 10px rgba(59,130,246,0.5);"></div>`,
+          className: '',
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
+        })
+      }).addTo(map);
+
+      userCircle = L.circle(e.latlng, radius, {
+        color: '#3b82f6',
+        fillColor: '#3b82f6',
+        fillOpacity: 0.15,
+        weight: 1
+      }).addTo(map);
+    }
+
+    map.on('locationfound', onLocationFound);
+    map.on('locationerror', (e) => console.log("Standortzugriff verweigert oder nicht verfügbar."));
+
+    // Native Geolocation Wrapper for Capacitor
+    async function requestLocation(setView = true) {
+      const isNative = window.Capacitor?.isNativePlatform();
+      if (isNative && Geolocation) {
+        try {
+          const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+          onLocationFound({ 
+            latlng: [pos.coords.latitude, pos.coords.longitude], 
+            accuracy: pos.coords.accuracy 
+          });
+          if (setView) map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+        } catch (e) {
+          map.locate({setView, maxZoom: 15});
+        }
+      } else {
+        map.locate({setView, maxZoom: 15});
+      }
+    }
+
+    // App Initialisierung
+    async function startApp() {
+      await initGeolocation(); // Warte auf Berechtigung
+      requestLocation(true);   // Dann erst Standort abrufen
+      loadCommunityMarkers();
+    }
+
+    startApp();
+
+    locateBtn.addEventListener('click', () => requestLocation(true));
+
+    function switchScreen(screenName){
+      screens.forEach(screen => {
+        screen.classList.toggle('active', screen.id === `screen-${screenName}`);
+      });
+
+      navButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.screen === screenName);
+      });
+
+      // Fix Leaflet rendering issues when container visibility changes
+      if(screenName === 'home') {
+        setTimeout(() => map.invalidateSize(), 300);
+      }
+      if(screenName === 'tour-detail') {
+        setTimeout(() => detailMap.invalidateSize(), 300);
+      }
+      if(screenName === 'tour-preview') {
+        setTimeout(() => previewMap.invalidateSize(), 300);
+      }
+
+      // Navigation beenden, wenn man den Screen verlässt
+      if (screenName !== 'tour-detail' && navWatchId !== null) {
+        toggleNavigation(); 
+      }
+    }
+
+    navButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        switchScreen(btn.dataset.screen);
+      });
+    });
+
+    actionButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        switchScreen(btn.dataset.target);
+      });
+    });
+
+    gpxInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async function(event) {
+        const content = event.target.result;
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(content, "text/xml");
+        // Nutze querySelectorAll mit Berücksichtigung von Namespaces
+        const trackPoints = Array.from(xmlDoc.querySelectorAll('trkpt'));
+        
+        let points = [];
+        let elevations = [];
+        let hasElevationData = false;
+        let powerSeries = [], speedSeries = [], cadSeries = [];
+        let totalPower = 0, powerCount = 0, maxPower = 0;
+        let totalHR = 0, hrCount = 0;
+        let totalCad = 0, cadCount = 0;
+        let totalSpeed = 0, speedCount = 0, maxSpeed = 0;
+        let totalDist = 0;
+        let totalGain = 0;
+
+        // Haversine Formel für Distanzberechnung
+        const calcDist = (lat1, lon1, lat2, lon2) => {
+          const R = 6371;
+          const dLat = (lat2 - lat1) * Math.PI / 180;
+          const dLon = (lon2 - lon1) * Math.PI / 180;
+          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+          return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        };
+
+        trackPoints.forEach((pt, i) => {
+          const lat = parseFloat(pt.getAttribute('lat'));
+          const lon = parseFloat(pt.getAttribute('lon'));
+          points.push([lat, lon]);
+
+          const eleNode = pt.querySelector('ele');
+          let ele = 0;
+          if (eleNode) {
+            ele = parseFloat(eleNode.textContent);
+            hasElevationData = true;
+          }
+
+          if (i > 0) {
+            const d = calcDist(points[i-1][0], points[i-1][1], lat, lon);
+            totalDist += d;
+            const diff = ele - (elevations[i-1] ? elevations[i-1].val : ele);
+            if (diff > 0) totalGain += diff;
+          }
+          
+          elevations.push({ dist: totalDist, val: ele });
+
+          // Sensordaten extrahieren (Power, HR, Cadence, Speed)
+          const pwr = pt.getElementsByTagName('power')[0] || pt.querySelector('power');
+          if (pwr) { 
+            const pVal = parseFloat(pwr.textContent);
+            totalPower += pVal; powerCount++; 
+            if (pVal > maxPower) maxPower = pVal;
+            powerSeries.push({ dist: totalDist, val: pVal });
+          }
+          
+          let hr = pt.getElementsByTagName('hr')[0] || pt.getElementsByTagName('gpxtpx:hr')[0];
+          if (hr) { totalHR += parseFloat(hr.textContent); hrCount++; }
+
+          let cad = pt.getElementsByTagName('cad')[0] || pt.getElementsByTagName('gpxtpx:cad')[0];
+          if (cad) { 
+            const cVal = parseFloat(cad.textContent);
+            totalCad += cVal; cadCount++;
+            cadSeries.push({ dist: totalDist, val: cVal });
+          }
+
+          // Geschwindigkeit (oft in m/s in den Extensions)
+          let vel = pt.getElementsByTagName('speed')[0] || pt.getElementsByTagName('gpxtpx:speed')[0];
+          if (vel) { 
+            const sVal = parseFloat(vel.textContent) * 3.6; // m/s zu km/h
+            if (sVal >= 0 && sVal < 100) { // Plausibilitäts-Check für Sensordaten
+              totalSpeed += sVal;
+              speedCount++; 
+              speedSeries.push({ dist: totalDist, val: sVal });
+            }
+          } else if (i > 0) {
+            // Fallback: Geschwindigkeit aus Distanz/Zeit berechnen
+            const t1 = new Date(trackPoints[i-1].getElementsByTagName('time')[0]?.textContent);
+            const t2 = new Date(pt.getElementsByTagName('time')[0]?.textContent);
+            if (t1 && t2 && t2 > t1) {
+              const diffSec = (t2 - t1) / 1000;
+              // Nur berechnen, wenn Zeitintervall groß genug ist (> 0.5s), um Jitter zu vermeiden
+              if (diffSec > 0.5) {
+                const d = calcDist(points[i-1][0], points[i-1][1], lat, lon);
+                const s = (d / (diffSec / 3600));
+                if (s >= 0 && s < 90) { // Strengerer Check für manuell berechnete Werte
+                totalSpeed += s;
+                speedCount++;
+                speedSeries.push({ dist: totalDist, val: s });
+                }
+              }
+            }
+          }
+        });
+
+        // Fallback: Wenn keine Höhendaten in GPX, von Open-Meteo API abrufen (sehr zuverlässig)
+        if (!hasElevationData && points.length > 0) {
+          try {
+            // Max 80 Punkte um URL-Längenbeschränkungen sicher zu umgehen (Browser-Limits)
+            const maxPoints = 80;
+            const sampleRate = Math.max(1, Math.ceil(points.length / maxPoints));
+            const sampled = points.filter((_, idx) => idx % sampleRate === 0);
+            
+            const lats = sampled.map(p => p[0]).join(',');
+            const lons = sampled.map(p => p[1]).join(',');
+            
+            const response = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lats}&longitude=${lons}`);
+            const data = await response.json();
+            
+            if (data && data.elevation && Array.isArray(data.elevation)) {
+              // Korrektur: Open-Meteo gibt direkt ein "elevation" Array zurück
+              const count = data.elevation.length;
+              elevations = data.elevation.map((ele, i) => ({
+                dist: (totalDist / (count > 1 ? count - 1 : 1)) * i,
+                val: ele
+              }));
+            }
+
+            // Gesamtanstieg neu berechnen
+            totalGain = 0;
+            for(let j = 1; j < elevations.length; j++) {
+              const diff = elevations[j].val - elevations[j-1].val;
+              if(diff > 0) totalGain += diff;
+            }
+          } catch (err) {
+            console.error("Höhendaten-API Fehler:", err);
+          }
+        }
+
+        const avgPower = powerCount > 0 ? Math.round(totalPower / powerCount) : 0;
+        const avgHR = hrCount > 0 ? Math.round(totalHR / hrCount) : 0;
+        const avgCad = cadCount > 0 ? Math.round(totalCad / cadCount) : 0;
+        const avgSpeed = speedCount > 0 ? parseFloat((totalSpeed / speedCount).toFixed(1)) : 0;
+
+        // Robuste Max-Speed Berechnung: Nutze einen gleitenden Durchschnitt (5 Punkte),
+        // um GPS-Spikes (wie die 84 km/h) zu eliminieren.
+        maxSpeed = 0;
+        if (speedSeries.length > 0) {
+          for (let k = 0; k < speedSeries.length; k++) {
+            let sum = 0, count = 0;
+            for (let m = k - 2; m <= k + 2; m++) {
+              if (m >= 0 && m < speedSeries.length) {
+                sum += speedSeries[m].val;
+                count++;
+              }
+            }
+            const smoothed = sum / count;
+            if (smoothed > maxSpeed) maxSpeed = smoothed;
+          }
+        }
+        
+        const maxSpeedFormatted = parseFloat(maxSpeed.toFixed(1));
+        const distFormatted = totalDist.toFixed(1);
+        
+        // Tour-Objekt für Speicher erstellen
+        const tourData = {
+          id: Date.now(),
+          name: file.name.replace('.gpx', ''),
+          distFormatted,
+          avgPower,
+          maxPower,
+          avgHR,
+          avgCad,
+          avgSpeed,
+          maxSpeed: maxSpeedFormatted,
+          totalGain,
+          tags: '',
+          notes: '',
+          points,
+          elevations,
+          speedSeries,
+          powerSeries,
+          cadSeries
+        };
+
+        // Auswahl-Menü für den Import-Typ anzeigen
+        showPicker({
+          title: "Wie möchtest du importieren?",
+          options: [
+            { label: "Als gefahrene Tour (Training)", value: "done" },
+            { label: "Als geplante Tour (Navigation)", value: "planned" }
+          ],
+          onSelect: (val) => {
+            if (val === 'done') {
+              saveTourToLocal(tourData);
+              renderTourItem(tourData);
+              showPopup({ title: "Import abgeschlossen", message: "Tour wurde unter 'Meine Touren' gespeichert." });
+            } else {
+              planRoute(tourData);
+            }
+            updateTourEmptyState();
+            updateProfileStats();
+            gpxInput.value = ""; // Input zurücksetzen für weitere Importe
+          }
+        });
+      };
+      reader.readAsText(file);
+    });
+
+    topActionBtn.addEventListener('click', () => {
+      switchScreen('settings');
+    });
+
+    // Settings Functionality
+    const mapOptions = [
+      { label: "CyclOSM (Klassisch)", value: "cyclosm" },
+      { label: "Mapbox Outdoors (Modern)", value: "mapbox" },
+      { label: "Thunderforest Cycle (Pro)", value: "thunderforest" },
+      { label: "OpenStreetMap (Standard)", value: "osm" },
+      { label: "Satellit", value: "satellite" }
+    ];
+
+    mapViewTrigger.addEventListener('click', () => {
+      showPicker({
+        title: "Kartenansicht",
+        options: mapOptions,
+        currentValue: mapViewTrigger.dataset.value || 'cyclosm',
+        onSelect: (val, label) => {
+          mapViewTrigger.innerText = label;
+          mapViewTrigger.dataset.value = val;
+          map.removeLayer(activeLayer);
+          activeLayer = layers[val];
+          activeLayer.addTo(map);
+        }
+      });
+    });
+
+    unitTrigger.addEventListener('click', () => {
+      showPicker({
+        title: "Einheiten wählen",
+        options: [
+          { label: "Metrisch (km, km/h)", value: "metric" },
+          { label: "Imperial (mi, mph)", value: "imperial" }
+        ],
+        currentValue: unitTrigger.dataset.value || 'metric',
+        onSelect: (val, label) => {
+          unitTrigger.innerText = label;
+          unitTrigger.dataset.value = val;
+          updateProfileStats();
+        }
+      });
+    });
+
+    searchDistTrigger.addEventListener('click', () => {
+      showPicker({
+        title: "Maximale Distanz",
+        options: [
+          { label: "Beliebig", value: "any" },
+          { label: "10–25 km", value: "short" },
+          { label: "25–50 km", value: "medium" },
+          { label: "50–80 km", value: "long" },
+          { label: "80+ km", value: "ultra" }
+        ],
+        currentValue: searchDistTrigger.dataset.value,
+        onSelect: (val, label) => {
+          searchDistTrigger.innerText = label;
+          searchDistTrigger.dataset.value = val;
+        }
+      });
+    });
+
+    visibilityToggle.addEventListener('change', (e) => {
+      if (userMarker) {
+        userMarker._icon.firstChild.style.background = e.target.checked ? '#3b82f6' : '#94a3b8';
+      }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      showPopup({
+        title: "Abmelden?",
+        message: "Möchtest du die Sitzung wirklich beenden?",
+        confirmText: "Abmelden",
+        cancelText: "Bleiben",
+        onConfirm: () => location.reload()
+      });
+    });
+
+    profileSaveBtn.addEventListener('click', () => {
+      const newName = profileNameInput.value;
+      document.getElementById('profileNameDisplay').innerText = newName;
+      updateAvatar(newName);
+      localStorage.setItem('cb_profile_name', newName);
+      localStorage.setItem('cb_profile_region', profileRegionInput.value);
+      updateProfileStats();
+      showPopup({
+        title: "Profil gespeichert",
+        message: "Deine Änderungen wurden erfolgreich übernommen."
+      });
+    });
+
+    settingsDoneBtn.addEventListener('click', () => {
+      showPopup({
+        title: "Einstellungen übernommen",
+        message: "Deine Präferenzen wurden gespeichert.",
+        onConfirm: () => switchScreen('home')
+      });
+    });
+  </script>
+</body>
+</html>
