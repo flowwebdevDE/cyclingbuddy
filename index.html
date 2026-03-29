@@ -26,6 +26,7 @@
       --text-soft: #475569; /* Dunkleres Slate für besseren Kontrast */
       --line: #e2e8f0;
       --accent: #10b981;
+      --accent-rgb: 16, 185, 129;
       --accent-2: #059669;
       --danger: #ff6b6b;
       --radius-xl: 24px;
@@ -37,6 +38,65 @@
       --nav-h: 110px;
       --header-h: 76px;
       --max-width: 520px;
+    }
+
+    body.dark-mode {
+      --bg: #0f172a;
+      --bg-soft: #1e293b;
+      --card: #1e293b;
+      --card-strong: #0f172a;
+      --text: #f1f5f9;
+      --text-soft: #94a3b8;
+      --line: #334155;
+      --shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    /* Design Pakete (Gesamt-Layouts) */
+    body.theme-pro-racing {
+      --accent: #e30613; 
+      --accent-rgb: 227, 6, 19;
+      --accent-2: #b90510;
+      --radius-xl: 14px; --radius-lg: 8px; --radius-md: 4px;
+      --shadow: 0 4px 15px rgba(227, 6, 19, 0.15);
+    }
+    body.theme-nordic-night {
+      --accent: #0ea5e9;
+      --accent-rgb: 14, 165, 233;
+      --accent-2: #0369a1;
+      --radius-xl: 20px; --radius-lg: 14px; --radius-md: 10px;
+      --bg: #0f172a; --bg-soft: #1e293b; --card: #1e293b; --text: #f1f5f9;
+      --line: #334155;
+    }
+    body.theme-golden-hour {
+      --accent: #f59e0b;
+      --accent-rgb: 245, 158, 11;
+      --accent-2: #b45309;
+      --radius-xl: 40px; --radius-lg: 24px; --radius-md: 16px;
+      --shadow: 0 12px 30px rgba(180, 83, 9, 0.15);
+    }
+    body.theme-emerald-classic {
+      --accent: #10b981;
+      --accent-rgb: 16, 185, 129;
+      --accent-2: #059669;
+      --radius-xl: 24px; --radius-lg: 18px; --radius-md: 12px;
+    }
+    body.theme-stealth {
+      --accent: #64748b;
+      --accent-rgb: 100, 116, 139;
+      --accent-2: #334155;
+      --radius-xl: 0px; --radius-lg: 0px; --radius-md: 0px;
+      --bg: #ffffff; --card: #ffffff;
+      --shadow: none; --line: #000000;
+    }
+    body.theme-retro-80s {
+      --accent: #ff00ff; /* Neon Magenta */
+      --accent-rgb: 255, 0, 255;
+      --accent-2: #00ffff; /* Electric Cyan */
+      --radius-xl: 12px; --radius-lg: 8px; --radius-md: 4px;
+      --bg: #050505; --bg-soft: #121212; --card: #1a1a1a;
+      --text: #ffffff; --text-soft: #b3b3b3;
+      --line: #333333;
+      --shadow: 0 0 20px rgba(255, 0, 255, 0.2);
     }
 
     *{
@@ -80,8 +140,9 @@
       /* Padding oben wird um die Höhe der Statusbar (Safe Area) erweitert */
       padding: calc(14px + env(safe-area-inset-top)) 18px 14px;
       backdrop-filter: var(--blur);
-      background: rgba(255,255,255,0.8);
-      border-bottom: 1px solid rgba(0,0,0,0.05);
+      background: var(--bg-soft);
+      border-bottom: 1px solid var(--line);
+      opacity: 0.98;
     }
 
     .brand-wrap{
@@ -156,7 +217,7 @@
       padding: 24px 18px;
       border-radius: 28px;
       background: 
-        linear-gradient(135deg, #10b981, #059669);
+        linear-gradient(135deg, var(--accent), var(--accent-2));
       color: white;
       border: 1px solid rgba(255,255,255,0.08);
       box-shadow: var(--shadow);
@@ -424,11 +485,11 @@
       justify-content: center;
       padding: 7px 10px;
       border-radius: 999px;
-      background: rgba(110,231,183,0.1);
+      background: rgba(var(--accent-rgb), 0.15);
       color: var(--accent-2); /* Dunkleres Grün für bessere Lesbarkeit auf hellem Grund */
       font-size: 12px;
       font-weight: 700;
-      border: 1px solid rgba(110,231,183,0.18);
+      border: 1px solid rgba(var(--accent-rgb), 0.2);
       white-space: nowrap;
     }
 
@@ -516,11 +577,12 @@
       gap: 8px;
       padding: 10px;
       border-radius: 24px;
-      background: rgba(255, 255, 255, 0.62);
+      background: var(--bg-soft);
       border: 1px solid var(--line);
       backdrop-filter: blur(20px);
       box-shadow: 0 15px 35px rgba(0,0,0,0.1);
       z-index: 1200;
+      opacity: 0.98;
     }
 
     .nav-btn{
@@ -639,6 +701,15 @@
       background: rgba(16, 185, 129, 0.1);
       color: var(--accent);
       font-weight: 600;
+    }
+
+    .color-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 12px;
     }
 
     /* Suggested Route Styles */
@@ -797,10 +868,17 @@
       opacity: 1;
       filter: grayscale(0);
       border-color: var(--accent);
-      background: rgba(16, 185, 129, 0.05);
+      background: rgba(var(--accent-rgb), 0.08);
     }
     .badge-icon { font-size: 24px; margin-bottom: 4px; display: block; }
     .badge-label { font-size: 11px; font-weight: 700; color: var(--text-soft); }
+    
+    .badge-item:active {
+      transform: scale(0.95);
+      background: rgba(var(--accent-rgb), 0.15);
+    }
+
+    .sidebar-header { display: none; }
 
     /* Desktop View Adaptations */
     @media (min-width: 1024px) {
@@ -846,13 +924,27 @@
         border-radius: 0;
         border-top: none;
         border-right: 1px solid var(--line);
-        grid-template-columns: 1fr;
-        grid-template-rows: auto;
+        display: flex;
+        flex-direction: column;
         align-content: start;
-        padding: 32px 16px;
+        padding: 40px 20px;
         gap: 12px;
         background: var(--bg-soft);
         box-shadow: none;
+      }
+
+      .sidebar-header {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 40px;
+        padding: 0 12px;
+      }
+
+      .sidebar-header .logo {
+        width: 54px;
+        height: 54px;
+        border-radius: 16px;
       }
 
       .nav-btn {
@@ -903,7 +995,7 @@
           <p>Ride together. Not alone.</p>
         </div>
       </div>
-      <button style="display: none;" class="icon-btn" id="topActionBtn">
+      <button class="icon-btn" id="topActionBtn">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
     </header>
@@ -1160,6 +1252,40 @@
             <h3>Einstellungen</h3>
             <button class="btn btn-secondary" id="settingsDoneBtn" style="padding: 8px 12px;">Fertig</button>
           </div>
+
+          <div class="card" style="margin-bottom: 16px;">
+            <h4>Erscheinungsbild</h4>
+            <div class="form-group">
+              <label class="label">Design-Modus</label>
+              <div class="select-trigger" id="themeSelect" data-value="light">Light Mode</div>
+            </div>
+            <div class="form-group">
+              <label class="label">Akzentfarbe</label>
+              <div class="select-trigger" id="accentSelect" data-value="#10b981">
+                <span><span class="color-dot" style="background: #10b981;"></span>Emerald (Standard)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom: 16px;">
+            <h4>Design & Layout</h4>
+            <div class="form-group">
+              <label class="label">Design-Paket</label>
+              <div class="select-trigger" id="layoutPresetSelect" data-value="theme-pro-racing">myvelo Pro Racing</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom: 16px;">
+            <h4>Native Funktionen</h4>
+            <div class="form-group" style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px;">
+              <label class="label" style="margin:0;">Haptisches Feedback</label>
+              <input type="checkbox" id="hapticsToggle" checked style="width:20px; height:20px; accent-color:var(--accent);">
+            </div>
+            <div class="form-group" style="display:flex; align-items:center; justify-content:space-between;">
+              <label class="label" style="margin:0;">Bildschirm immer an</label>
+              <input type="checkbox" id="wakelockToggle" checked style="width:20px; height:20px; accent-color:var(--accent);">
+            </div>
+          </div>
           
           <div class="card">
             <h4>App-Präferenzen</h4>
@@ -1377,6 +1503,7 @@
         <div style="margin-top: 24px;">
           <button class="btn btn-primary" id="startNavBtn" style="width: 100%; padding: 16px; font-size: 16px;">Navigation starten</button>
           <button class="btn btn-secondary" id="openExportBtn" style="width: 100%; margin-top: 12px; border-color: var(--accent); color: var(--accent);">Bild mit Stats exportieren</button>
+          <button class="btn btn-secondary" id="exportGpxBtn" style="width: 100%; margin-top: 12px; border-color: var(--text-soft); color: var(--text-soft);">GPX exportieren</button>
         </div>
       </section>
     </main>
@@ -1483,6 +1610,15 @@
     </div>
 
     <nav class="bottom-nav">
+      <div class="sidebar-header">
+        <div class="logo">
+          <img src="logo.png" alt="Logo">
+        </div>
+        <div class="brand">
+          <h1 style="font-size: 22px; font-weight: 800; letter-spacing: -0.04em;">CyclingBuddy</h1>
+          <p style="margin: 4px 0 0; color: var(--text-soft); font-size: 13px;">Pro Dashboard</p>
+        </div>
+      </div>
       <button class="nav-btn active" data-screen="home">
         <div class="nav-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -1519,11 +1655,12 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     // Capacitor Plugin Initialization
-    const { StatusBar, Geolocation, Filesystem, Share } = window.Capacitor?.Plugins || {};
+    const { StatusBar, Geolocation, Filesystem, Share, Haptics } = window.Capacitor?.Plugins || {};
 
-    if (StatusBar) {
-      StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
-      StatusBar.setStyle({ style: 'LIGHT' }).catch(() => {});
+    function triggerHaptic() {
+      if (Haptics && localStorage.getItem('cb_haptics') !== 'false') {
+        Haptics.impact({ style: 'LIGHT' }).catch(() => {});
+      }
     }
 
     // Explizite Abfrage der Standort-Berechtigung
@@ -1598,7 +1735,153 @@
     const exportCanvas = document.getElementById('exportCanvas');
     const downloadExportBtn = document.getElementById('downloadExportBtn');
     const openExportBtn = document.getElementById('openExportBtn');
+    const exportGpxBtn = document.getElementById('exportGpxBtn');
     const routeWidthSlider = document.getElementById('routeWidthSlider');
+    const themeTrigger = document.getElementById('themeSelect');
+    const accentTrigger = document.getElementById('accentSelect');
+    const hapticsToggle = document.getElementById('hapticsToggle');
+    const layoutPresetTrigger = document.getElementById('layoutPresetSelect');
+
+    // --- Theme & Settings Logic ---
+    function applyTheme(theme) {
+      const body = document.body;
+      let isDark = false;
+      
+      if (theme === 'system') {
+        isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      } else {
+        isDark = theme === 'dark';
+      }
+
+      body.classList.toggle('dark-mode', isDark);
+      
+      if (StatusBar) {
+        StatusBar.setStyle({ style: isDark ? 'DARK' : 'LIGHT' }).catch(() => {});
+      }
+      
+      localStorage.setItem('cb_theme', theme);
+      if (themeTrigger) {
+        const labels = { system: 'System (Automatisch)', light: 'Light Mode', dark: 'Dark Mode' };
+        themeTrigger.innerText = labels[theme];
+        themeTrigger.dataset.value = theme;
+      }
+    }
+
+    function applyAccent(color) {
+      document.documentElement.style.setProperty('--accent', color);
+      
+      // Konvertiere Hex zu RGB für CSS rgba() Funktionen
+      const r = parseInt(color.slice(1, 3), 16);
+      const g = parseInt(color.slice(3, 5), 16);
+      const b = parseInt(color.slice(5, 7), 16);
+      document.documentElement.style.setProperty('--accent-rgb', `${r}, ${g}, ${b}`);
+      
+      // Berechne eine dunklere Variante für Verläufe (Accent-2)
+      const accent2 = "#" + [r, g, b].map(x => Math.floor(x * 0.8).toString(16).padStart(2, '0')).join('');
+      document.documentElement.style.setProperty('--accent-2', accent2);
+
+      // Update System Theme Color
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', color);
+      
+      localStorage.setItem('cb_accent', color);
+      if (accentTrigger) accentTrigger.dataset.value = color;
+    }
+
+    function applyLayoutSettings() {
+      const preset = localStorage.getItem('cb_layout_preset') || 'theme-pro-racing';
+      
+      // Entferne alle alten Themes
+      document.body.classList.remove('theme-pro-racing', 'theme-nordic-night', 'theme-golden-hour', 'theme-emerald-classic', 'theme-stealth', 'theme-retro-80s');
+      // Füge das gewählte hinzu
+      document.body.classList.add(preset);
+
+      // Update UI Text
+      if (layoutPresetTrigger) {
+        const labels = {
+          'theme-pro-racing': 'myvelo Pro Racing',
+          'theme-nordic-night': 'Nordic Night (Dark)',
+          'theme-golden-hour': 'Golden Hour (Soft)',
+          'theme-emerald-classic': 'Emerald Classic',
+          'theme-stealth': 'Stealth Tech',
+          'theme-retro-80s': 'Retro 80s Neon'
+        };
+        layoutPresetTrigger.innerText = labels[preset];
+        layoutPresetTrigger.dataset.value = preset;
+      }
+      
+      // Akzentfarbe ebenfalls synchronisieren für den Rest der Logik
+      const computedAccent = getComputedStyle(document.body).getPropertyValue('--accent').trim();
+      if (computedAccent) applyAccent(computedAccent);
+    }
+
+    // Initial Settings Load
+    const savedTheme = localStorage.getItem('cb_theme') || 'light';
+    const savedAccent = localStorage.getItem('cb_accent') || '#10b981';
+    const savedHaptics = localStorage.getItem('cb_haptics') !== 'false';
+    
+    applyTheme(savedTheme);
+    applyAccent(savedAccent);
+    applyLayoutSettings();
+    if (hapticsToggle) hapticsToggle.checked = savedHaptics;
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if (localStorage.getItem('cb_theme') === 'system') applyTheme('system');
+    });
+
+    themeTrigger.onclick = () => {
+      showPicker({
+        title: "Design-Modus",
+        options: [
+          { label: "System (Automatisch)", value: "system" },
+          { label: "Light Mode", value: "light" },
+          { label: "Dark Mode", value: "dark" }
+        ],
+        currentValue: themeTrigger.dataset.value,
+        onSelect: (val) => applyTheme(val)
+      });
+    };
+
+    accentTrigger.onclick = () => {
+      showPicker({
+        title: "Akzentfarbe wählen",
+        options: [
+          { label: "Emerald (Grün)", value: "#10b981" },
+          { label: "Sky (Blau)", value: "#0ea5e9" },
+          { label: "Amber (Orange)", value: "#f59e0b" },
+          { label: "Rose (Rot)", value: "#f43f5e" },
+          { label: "Indigo (Violett)", value: "#6366f1" }
+        ],
+        currentValue: accentTrigger.dataset.value,
+        onSelect: (val, label) => {
+          applyAccent(val);
+          accentTrigger.innerHTML = `<span><span class="color-dot" style="background: ${val};"></span>${label}</span>`;
+        }
+      });
+    };
+
+    layoutPresetTrigger.onclick = () => {
+      showPicker({
+        title: "Design-Paket wählen",
+        options: [
+          { label: "Pro Racing", value: "theme-pro-racing" },
+          { label: "Nordic Night (Dark)", value: "theme-nordic-night" },
+          { label: "Golden Hour (Soft)", value: "theme-golden-hour" },
+          { label: "Emerald Classic", value: "theme-emerald-classic" },
+          { label: "Stealth Tech", value: "theme-stealth" },
+          { label: "Retro 80s Neon", value: "theme-retro-80s" }
+        ],
+        currentValue: layoutPresetTrigger.dataset.value,
+        onSelect: (val) => {
+          localStorage.setItem('cb_layout_preset', val);
+          applyLayoutSettings();
+        }
+      });
+    };
+
+    hapticsToggle.onchange = (e) => {
+      localStorage.setItem('cb_haptics', e.target.checked);
+      if (e.target.checked) triggerHaptic();
+    };
 
     function updateTourEmptyState() {
       noToursMsg.style.display = toursList.children.length > 0 ? 'none' : 'block';
@@ -2195,7 +2478,7 @@
       } else {
         exportCanvas.width = 1000; exportCanvas.height = 1000;
         ctx.clearRect(0, 0, 1000, 1000);
-        ctx.fillStyle = '#10b981';
+        ctx.fillStyle = localStorage.getItem('cb_accent') || '#10b981';
       }
 
       const margin = exportCanvas.width * 0.05;
@@ -2352,6 +2635,68 @@
         link.download = fileName;
         link.href = dataUrl;
         link.click();
+      }
+    };
+
+    exportGpxBtn.onclick = async () => {
+      const tour = [...JSON.parse(localStorage.getItem('cb_tours') || '[]'), ...JSON.parse(localStorage.getItem('cb_planned') || '[]')]
+                    .find(t => t.id === currentDetailTourId);
+      
+      if (!tour || !tour.points) return;
+
+      // GPX XML Struktur generieren
+      let gpx = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="CyclingBuddy" xmlns="http://www.topografix.com/GPX/1/1">
+  <trk>
+    <name>${tour.name || 'Tour'}</name>
+    <trkseg>`;
+
+      tour.points.forEach((p, i) => {
+        const ele = (tour.elevations && tour.elevations[i]) ? tour.elevations[i].val : 0;
+        gpx += `
+      <trkpt lat="${p[0]}" lon="${p[1]}">
+        <ele>${ele}</ele>
+      </trkpt>`;
+      });
+
+      gpx += `
+    </trkseg>
+  </trk>
+</gpx>`;
+
+      const fileName = `CyclingBuddy_${(tour.name || 'Tour').replace(/[^a-z0-9]/gi, '_')}.gpx`;
+      const isNative = window.Capacitor?.isNativePlatform();
+
+      if (isNative && Filesystem) {
+        try {
+          // In das Dateisystem schreiben
+          const savedFile = await Filesystem.writeFile({
+            path: fileName,
+            data: gpx,
+            directory: 'DOCUMENTS',
+            encoding: 'utf8'
+          });
+
+          if (Share) {
+            await Share.share({
+              title: 'GPX Export',
+              url: savedFile.uri,
+              dialogTitle: 'GPX Datei teilen'
+            });
+          }
+        } catch (err) {
+          console.error("GPX Export Fehler:", err);
+          showPopup({ title: "Fehler", message: "GPX konnte nicht exportiert werden." });
+        }
+      } else {
+        // Browser Fallback: Blob Download
+        const blob = new Blob([gpx], { type: 'application/gpx+xml' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = url;
+        link.click();
+        URL.revokeObjectURL(url);
       }
     };
 
@@ -2534,21 +2879,31 @@
       const container = document.getElementById('badgeContainer');
       if(!container) return;
 
-      const badgeDefinitions = [
-        { id: 'climber', label: 'Bergziege', icon: '⛰️', check: stats.totalGain >= 2000 },
-        { id: 'miler', label: '500km Club', icon: '🚴', check: stats.totalDist >= 500 },
-        { id: 'sprinter', label: 'Abfahrts-Pro', icon: '⚡', check: stats.maxOverallSpeed >= 55 },
-        { id: 'endurance', label: 'Ausdauer-Ass', icon: '🏆', check: stats.longestRide >= 60 },
-        { id: 'veteran', label: 'Stammgast', icon: '⭐', check: stats.count >= 10 }
+      window.badgeDefinitions = [
+        { id: 'climber', label: 'Bergziege', icon: '⛰️', desc: 'Erreiche insgesamt 2.000 Höhenmeter.', check: stats.totalGain >= 2000 },
+        { id: 'miler', label: '500km Club', icon: '🚴', desc: 'Lege eine Gesamtdistanz von 500 km zurück.', check: stats.totalDist >= 500 },
+        { id: 'sprinter', label: 'Abfahrts-Pro', icon: '⚡', desc: 'Erreiche eine Geschwindigkeit von über 55 km/h.', check: stats.maxOverallSpeed >= 55 },
+        { id: 'endurance', label: 'Ausdauer-Ass', icon: '🏆', desc: 'Absolviere eine einzelne Tour mit mehr als 60 km.', check: stats.longestRide >= 60 },
+        { id: 'veteran', label: 'Stammgast', icon: '⭐', desc: 'Importiere oder plane mindestens 10 Touren.', check: stats.count >= 10 }
       ];
 
-      container.innerHTML = badgeDefinitions.map(b => `
-        <div class="badge-item ${b.check ? 'earned' : ''}" title="${b.check ? 'Freigeschaltet!' : 'Noch nicht erreicht'}">
+      container.innerHTML = window.badgeDefinitions.map(b => `
+        <div class="badge-item ${b.check ? 'earned' : ''}" onclick="explainBadge('${b.id}')">
           <span class="badge-icon">${b.icon}</span>
           <span class="badge-label">${b.label}</span>
         </div>
       `).join('');
     }
+
+    window.explainBadge = (id) => {
+      const b = window.badgeDefinitions.find(x => x.id === id);
+      if (!b) return;
+      triggerHaptic();
+      showPopup({
+        title: `${b.icon} ${b.label}`,
+        message: `${b.desc}\n\nStatus: ${b.check ? '✅ Erreicht!' : '⏳ Noch in Arbeit...'}`
+      });
+    };
 
     // Local Storage Management
     function saveTourToLocal(tourData) {
