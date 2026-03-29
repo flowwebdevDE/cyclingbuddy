@@ -1,0 +1,17 @@
+{
+  "name": "CyclingBuddy",
+  "short_name": "CyclingBuddy",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#10b981",
+  "description": "Ride together. Not alone.",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
